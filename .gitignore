@@ -1,18 +1,19 @@
-# ══════════════════════════════════════
 # TradeBot AI — .gitignore
-# ══════════════════════════════════════
 
-# CRÍTICO — nunca subir
+# CRITICO — nunca subir
 .env
 .env.*
 *.env
 
-# Base de conocimiento — demasiado grande y privada
+# Base de conocimiento — privada y grande
 base_conocimiento/
 chroma_db/
+
+# Base de datos local
 *.db
 *.sqlite
 *.sqlite3
+instance/
 
 # Python
 __pycache__/
@@ -28,6 +29,11 @@ venv/
 env/
 .venv/
 
+# Logs
+*.log
+logs/
+tradebot_errors.log
+
 # Node
 node_modules/
 npm-debug.log*
@@ -37,18 +43,17 @@ npm-debug.log*
 Thumbs.db
 desktop.ini
 
-# Logs
-*.log
-logs/
-
 # IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 
-# Archivos temporales
+# Temporales
 *.tmp
 *.bak
 temp/
 tmp/
+
+# Google credentials
+*.json
