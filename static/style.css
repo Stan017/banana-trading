@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════════════════
    TRADEBOT AI — Apple × Trading Terminal
    Dark carbon · Electric blue · Terminal green
+   + Light mode · Language toggle
 ═══════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
@@ -8,6 +9,7 @@
 /* ── Reset & Base ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Dark theme (default) ── */
 :root {
   --bg0:      #09090b;
   --bg1:      #111114;
@@ -32,6 +34,29 @@
   --sidebar-w:280px;
   --shadow:   0 4px 24px rgba(0,0,0,0.4);
   --shadow-lg:0 8px 48px rgba(0,0,0,0.6);
+}
+
+/* ── Light theme ── */
+[data-theme="light"] {
+  --bg0:      #f8f9fb;
+  --bg1:      #ffffff;
+  --bg2:      #f1f3f6;
+  --bg3:      #e8ebf0;
+  --bg4:      #dde1e8;
+  --border:   rgba(0,0,0,0.07);
+  --border2:  rgba(0,0,0,0.12);
+  --blue:     #2563eb;
+  --blue-dim: rgba(37,99,235,0.10);
+  --blue-glow:rgba(37,99,235,0.25);
+  --green:    #059669;
+  --green-dim:rgba(5,150,105,0.10);
+  --red:      #e11d48;
+  --red-dim:  rgba(225,29,72,0.10);
+  --text:     #0f172a;
+  --text2:    #475569;
+  --text3:    #94a3b8;
+  --shadow:   0 4px 24px rgba(0,0,0,0.08);
+  --shadow-lg:0 8px 48px rgba(0,0,0,0.14);
 }
 
 html { font-size: 16px; }
@@ -770,4 +795,179 @@ body {
 
 .logout-btn:hover {
   color: #ef4444;
+}
+
+/* ══════════════════════════════════════
+   THEME & LANGUAGE TOGGLES
+══════════════════════════════════════ */
+.ctrl-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-toggle,
+.lang-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  height: 30px;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text2);
+  font-family: var(--sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+  letter-spacing: 0.2px;
+}
+.theme-toggle {
+  width: 30px;
+  padding: 0;
+}
+.lang-toggle {
+  padding: 0 10px;
+}
+.theme-toggle:hover,
+.lang-toggle:hover {
+  background: var(--bg3);
+  color: var(--text);
+  border-color: var(--border2);
+}
+.theme-toggle svg { flex-shrink: 0; }
+
+/* Moon icon: show in dark mode, hide in light */
+.icon-moon { display: block; }
+.icon-sun  { display: none; }
+[data-theme="light"] .icon-moon { display: none; }
+[data-theme="light"] .icon-sun  { display: block; }
+
+/* ══════════════════════════════════════
+   USER PANEL MEJORADO
+══════════════════════════════════════ */
+.user-pill {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 0;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+.user-pill:hover { border-color: rgba(37,99,235,0.35); }
+
+.user-pill-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 5px 5px;
+}
+.user-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: cover;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  flex-shrink: 0;
+}
+.user-name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 34px;
+  border-left: 1px solid var(--border);
+  color: var(--text3);
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.logout-btn:hover {
+  color: var(--red);
+  background: var(--red-dim);
+}
+
+/* ══════════════════════════════════════
+   SIDEBAR MEJORADO — labels y sección
+══════════════════════════════════════ */
+.sb-section-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.sb-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* Price card mejorado: símbolo + precio en top row */
+.price-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.price-symbol {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text3);
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Transition suave en el cambio de tema */
+body, .sidebar, .main, .top-header,
+.msg-bubble, .input-wrap, .price-card,
+.kb-card, .clear-btn, .chip, .status-pill {
+  transition: background 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+/* Light mode: chat area bg slightly diferente */
+[data-theme="light"] .chat-area { background: var(--bg0); }
+[data-theme="light"] .msg-user .msg-bubble {
+  box-shadow: 0 2px 10px rgba(37,99,235,0.2);
+}
+[data-theme="light"] .msg-bot .msg-bubble {
+  box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+}
+[data-theme="light"] .input-wrap {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+[data-theme="light"] .welcome-glow {
+  background: radial-gradient(ellipse, rgba(37,99,235,0.06) 0%, transparent 70%);
+}
+
+/* ══════════════════════════════════════
+   SCROLLBAR LIGHT MODE
+══════════════════════════════════════ */
+[data-theme="light"] .chat-area {
+  scrollbar-color: var(--bg4) transparent;
+}
+[data-theme="light"] .sidebar {
+  scrollbar-color: var(--bg4) transparent;
 }

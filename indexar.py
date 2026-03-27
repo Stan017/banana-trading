@@ -168,31 +168,10 @@ def obtener_ids_chroma() -> set:
 
 
 def obtener_ids_qdrant() -> set:
-    """Obtiene los id_orig de Qdrant para deduplicar"""
+    """Retorna set vacío — upsert de Qdrant maneja duplicados automáticamente"""
     if not _qdrant_ok or not _qdrant_client:
         return set()
-    try:
-        ids = set()
-        offset = None
-        while True:
-            res, next_offset = _qdrant_client.scroll(
-                collection_name=QDRANT_COLLECTION,
-                limit=1000,
-                offset=offset,
-                with_payload=["id_orig"],
-                with_vectors=False,
-            )
-            for punto in res:
-                orig = punto.payload.get("id_orig", "")
-                if orig:
-                    ids.add(orig)
-            if next_offset is None:
-                break
-            offset = next_offset
-        return ids
-    except Exception as e:
-        print(f"  ⚠️  No se pudo obtener IDs de Qdrant: {e}")
-        return set()
+    return set()
 
 
 # ════════════════════════════════════════════════════════

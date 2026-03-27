@@ -222,3 +222,157 @@ if __name__ == "__main__":
     for c in res.get("confluencias", []):
         icono = "✅" if c["ok"] else "❌"
         print(f"  {icono} {c['nombre']}: {c['detalle']}")
+
+
+# ============================================================
+# FASE 3 — BACKTESTING DEL SCANNER
+# ============================================================
+
+def backtest_scanner(symbol: str = "BTC/USDT", dias: int = 30) -> dict:
+    """
+    Backtesting del scanner sobre datos historicos 4H.
+    Evalua RSI + EMAs (funding/OI no disponibles en historico).
+    Cuando detecta setup, mira las 3 velas siguientes para calcular resultado.
+    """
+    from binance_data import get_velas, calcular_ema, calcular_rsi
+
+    try:
+        velas_necesarias = min(dias * 6 + 220, 1000)
+        velas4h = get_velas(symbol, "4h", velas_necesarias)
+        velas1d = get_velas(symbol, "1d", 210)
+
+        if len(velas4h) < 220:
+            return {"ok": False, "error": "Datos historicos insuficientes",
+                    "symbol": symbol, "dias": dias}
+
+        n_backtest  = min(dias * 6, len(velas4h) - 220)
+        velas_hist  = velas4h[:-n_backtest]
+        velas_test  = velas4h[-n_backtest:]
+
+        setups_detectados = []
+        ventana_hist = list(velas_hist)
+
+        for i, vela in enumerate(velas_test):
+            ventana_hist.append(vela)
+            closes = [v["close"] for v in ventana_hist]
+            precio = vela["close"]
+
+            if len(closes) < 205:
+                continue
+
+            ema5   = calcular_ema(closes, 5)
+            ema10  = calcular_ema(closes, 10)
+            ema21  = calcular_ema(closes, 21)
+            ema50  = calcular_ema(closes, 50)
+            ema200 = calcular_ema(closes, 200)
+            rsi    = calcular_rsi(closes, periodo=62, suavizado=14)
+
+            # C1: RSI en zona extrema
+            c1_ok   = rsi is not None and (rsi >= 55 or rsi <= 45)
+            c1_bias = "BAJISTA" if (rsi and rsi >= 55) else ("ALCISTA" if (rsi and rsi <= 45) else None)
+
+            # C2: EMAs alineadas
+            emas = [e for e in [ema5, ema10, ema21, ema50, ema200] if e is not None]
+            c2_ok = False; c2_bias = None
+            if len(emas) >= 3:
+                sobre = sum(1 for e in emas if precio > e)
+                bajo  = sum(1 for e in emas if precio < e)
+                if sobre >= 3:
+                    c2_ok = True; c2_bias = "ALCISTA"
+                elif bajo >= 3:
+                    c2_ok = True; c2_bias = "BAJISTA"
+
+            if not (c1_ok and c2_ok and c1_bias == c2_bias):
+                continue
+
+            bias = c1_bias
+            velas_sig = velas_test[i+1:i+4]
+            if len(velas_sig) < 3:
+                continue
+
+            atr_simple   = abs(vela["high"] - vela["low"])
+            max_sig      = max(v["high"] for v in velas_sig)
+            min_sig      = min(v["low"]  for v in velas_sig)
+
+            if bias == "ALCISTA":
+                target   = precio + atr_simple * 1.5
+                stoploss = precio - atr_simple * 1.0
+                gano     = max_sig >= target
+                perdio   = min_sig <= stoploss
+            else:
+                target   = precio - atr_simple * 1.5
+                stoploss = precio + atr_simple * 1.0
+                gano     = min_sig <= target
+                perdio   = max_sig >= stoploss
+
+            if gano and not perdio:
+                resultado = "WIN"
+            elif perdio and not gano:
+                resultado = "LOSS"
+            elif gano and perdio:
+                resultado = "WIN"
+            else:
+                resultado = "NEUTRAL"
+
+            setups_detectados.append({
+                "fecha":    vela["fecha"],
+                "precio":   precio,
+                "bias":     bias,
+                "rsi":      round(rsi, 1) if rsi else None,
+                "resultado": resultado,
+                "target":   round(target, 2),
+                "stoploss": round(stoploss, 2),
+            })
+
+        total    = len(setups_detectados)
+        wins     = sum(1 for s in setups_detectados if s["resultado"] == "WIN")
+        losses   = sum(1 for s in setups_detectados if s["resultado"] == "LOSS")
+        neutral  = sum(1 for s in setups_detectados if s["resultado"] == "NEUTRAL")
+        win_rate = round((wins / total) * 100, 1) if total > 0 else 0
+
+        alcistas = [s for s in setups_detectados if s["bias"] == "ALCISTA"]
+        bajistas = [s for s in setups_detectados if s["bias"] == "BAJISTA"]
+        wr_alc   = round(sum(1 for s in alcistas if s["resultado"]=="WIN") / len(alcistas) * 100, 1) if alcistas else 0
+        wr_baj   = round(sum(1 for s in bajistas if s["resultado"]=="WIN") / len(bajistas) * 100, 1) if bajistas else 0
+
+        return {
+            "ok":                True,
+            "symbol":            symbol,
+            "dias":              dias,
+            "velas_evaluadas":   n_backtest,
+            "setups_detectados": total,
+            "wins":              wins,
+            "losses":            losses,
+            "neutral":           neutral,
+            "win_rate":          win_rate,
+            "win_rate_alcistas": wr_alc,
+            "win_rate_bajistas": wr_baj,
+            "nota":              "Backtest con RSI + EMAs (funding/OI no disponibles en historico)",
+            "setups":            setups_detectados[-10:],
+        }
+
+    except Exception as e:
+        return {"ok": False, "error": str(e), "symbol": symbol, "dias": dias}
+
+
+def formatear_backtest(resultado: dict) -> str:
+    """Formatea el resultado del backtest como texto legible."""
+    if not resultado.get("ok"):
+        return f"Error en backtest: {resultado.get('error', 'desconocido')}"
+    r = resultado
+    lineas = [
+        f"\n=== BACKTEST SCANNER - {r['symbol']} ({r['dias']} dias) ===",
+        f"Velas evaluadas:   {r['velas_evaluadas']}",
+        f"Setups detectados: {r['setups_detectados']}",
+        f"Wins: {r['wins']} | Losses: {r['losses']} | Neutral: {r['neutral']}",
+        f"Win Rate total:    {r['win_rate']}%",
+        f"Win Rate ALCISTAS: {r['win_rate_alcistas']}%",
+        f"Win Rate BAJISTAS: {r['win_rate_bajistas']}%",
+        f"Nota: {r['nota']}",
+        "\nUltimos setups:",
+    ]
+    for s in r.get("setups", [])[-5:]:
+        icono = "OK" if s["resultado"] == "WIN" else "XX" if s["resultado"] == "LOSS" else "--"
+        lineas.append(f"  [{icono}] {s['fecha']} | {s['bias']:<8} | RSI {s['rsi']} | precio ${s['precio']:,.0f}")
+    lineas.append("=" * 50)
+    return "\n".join(lineas)

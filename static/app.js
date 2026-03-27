@@ -527,3 +527,154 @@ setInterval(cargarMercado, 120000);
 
 // Botón refresh también recarga mercado
 btnRefresh.addEventListener('click', cargarMercado);
+
+// ═══════════════════════════════════════
+// THEME TOGGLE — Dark / Light
+// ═══════════════════════════════════════
+(function initTheme() {
+  const saved = localStorage.getItem('theme') || 'dark';
+  document.documentElement.setAttribute('data-theme', saved);
+})();
+
+const themeToggle = document.getElementById('theme-toggle');
+if (themeToggle) {
+  themeToggle.addEventListener('click', () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
+  });
+}
+
+// ═══════════════════════════════════════
+// LANGUAGE TOGGLE — ES / EN
+// ═══════════════════════════════════════
+const TRANSLATIONS = {
+  es: {
+    eyebrow:   'Asistente de Trading',
+    online:    'En línea',
+    thinking:  'Analizando...',
+    inputHint: 'Enter para enviar · Shift+Enter para nueva línea',
+    placeholder:'Pregunta sobre BTC, análisis técnico, estrategias...',
+    welcome:   '¡Bienvenido a TradeBot AI!',
+    welcomeSub:'Tu asistente de trading con inteligencia artificial. Analiza mercados, aprende conceptos y toma decisiones informadas.',
+    disclaimer:'⚠️ Solo con fines educativos. No es asesoramiento financiero.',
+    clearChat: 'Limpiar conversación',
+    tgHint:    'Alertas de setup BTC · Reporte diario',
+    market:    'Mercado en vivo',
+    kb:        'Base de conocimiento',
+    chunks:    'Chunks indexados',
+    logoutTitle:'Cerrar sesión',
+    charLeft:  ' caracteres restantes',
+    errWait:   '⏱️ Demasiadas solicitudes. Espera un momento antes de continuar.',
+    errServer: '⚠️ Error interno del servidor. Intenta de nuevo en unos segundos.',
+    errUnavail:'⚠️ Servicio temporalmente no disponible.',
+    errGeneric:'⚠️ Error del servidor. Intenta de nuevo.',
+    errConn:   '📡 Sin conexión con el servidor. Verifica que Flask esté corriendo en el puerto 5000.',
+    errUnk:    '⚠️ Error inesperado. Recarga la página si persiste.',
+  },
+  en: {
+    eyebrow:   'Trading Assistant',
+    online:    'Online',
+    thinking:  'Analyzing...',
+    inputHint: 'Enter to send · Shift+Enter for new line',
+    placeholder:'Ask about BTC, technical analysis, strategies...',
+    welcome:   'Welcome to TradeBot AI!',
+    welcomeSub:'Your AI-powered trading assistant. Analyze markets, learn concepts and make informed decisions.',
+    disclaimer:'⚠️ For educational purposes only. Not financial advice.',
+    clearChat: 'Clear conversation',
+    tgHint:    'BTC setup alerts · Daily report',
+    market:    'Live market',
+    kb:        'Knowledge base',
+    chunks:    'Indexed chunks',
+    logoutTitle:'Sign out',
+    charLeft:  ' characters left',
+    errWait:   '⏱️ Too many requests. Please wait a moment before continuing.',
+    errServer: '⚠️ Internal server error. Try again in a few seconds.',
+    errUnavail:'⚠️ Service temporarily unavailable.',
+    errGeneric:'⚠️ Server error. Please try again.',
+    errConn:   '📡 No connection to server. Make sure Flask is running on port 5000.',
+    errUnk:    '⚠️ Unexpected error. Reload the page if it persists.',
+  }
+};
+
+let currentLang = localStorage.getItem('lang') || 'es';
+
+function applyLang(lang) {
+  const t = TRANSLATIONS[lang];
+  if (!t) return;
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+
+  // Update html lang attr
+  document.documentElement.lang = lang;
+
+  // Update all data-i18n elements
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (t[key]) el.textContent = t[key];
+  });
+
+  // Textarea placeholder
+  if (inputEl) inputEl.placeholder = t.placeholder;
+
+  // Sidebar labels
+  const marketLabel = document.querySelector('.sb-block-label');
+  if (marketLabel) marketLabel.textContent = t.market;
+
+  // KB label
+  const kbLabel = document.querySelector('.kb-label');
+  if (kbLabel) kbLabel.textContent = t.chunks;
+
+  // Telegram hint
+  const tgHint = document.querySelector('.tg-hint');
+  if (tgHint) tgHint.textContent = t.tgHint;
+
+  // Clear button
+  const clearSpan = document.querySelector('.clear-btn span');
+  if (clearSpan) clearSpan.textContent = t.clearChat;
+
+  // Logout title
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) logoutBtn.title = t.logoutTitle;
+
+  // Lang toggle button label — show opposite lang
+  const langToggle = document.getElementById('lang-toggle');
+  if (langToggle) {
+    langToggle.textContent = lang === 'es' ? 'EN' : 'ES';
+    langToggle.setAttribute('data-lang', lang);
+  }
+
+  // Status pill — only if currently online (not thinking)
+  const statusText = statusPill ? statusPill.querySelector('[data-i18n="online"]') : null;
+  if (statusText && !statusPill.classList.contains('thinking')) {
+    statusText.textContent = t.online;
+  }
+}
+
+// Override setStatus to use translations
+const _setStatusOrig = setStatus;
+function setStatus(estado) {
+  const dot  = statusPill.querySelector('.status-dot');
+  const text = statusPill.querySelector('[data-i18n="online"]') || statusPill.querySelector('span:last-child');
+  const t = TRANSLATIONS[currentLang] || TRANSLATIONS.es;
+  if (estado === 'thinking') {
+    statusPill.classList.add('thinking');
+    text.textContent = t.thinking;
+  } else {
+    statusPill.classList.remove('thinking');
+    text.textContent = t.online;
+  }
+}
+
+// Lang toggle button
+const langToggleBtn = document.getElementById('lang-toggle');
+if (langToggleBtn) {
+  langToggleBtn.addEventListener('click', () => {
+    const next = currentLang === 'es' ? 'en' : 'es';
+    applyLang(next);
+  });
+}
+
+// Apply saved language on load
+applyLang(currentLang);

@@ -1,4 +1,6 @@
+import time
 import ccxt
+import requests as _requests
 from datetime import datetime
 
 # ============================================================
@@ -8,6 +10,16 @@ exchange      = ccxt.binance()                          # spot — precio, velas
 exchange_fut  = ccxt.binance({                         # futuros — funding, OI
     'options': { 'defaultType': 'future' }
 })
+
+# ============================================================
+# CACHÉ DE DATOS BASE — 60s TTL
+# Elimina llamadas duplicadas dentro de la misma request
+# ============================================================
+_DATA_TTL      = 60   # segundos
+_PRECIO_CACHE: dict = {}
+_VELAS_CACHE:  dict = {}
+_FUNDING_CACHE: dict = {}
+_OI_CACHE:     dict = {}
 
 # ============================================================
 # HELPERS MATEMÁTICOS
@@ -112,20 +124,29 @@ def interpretar_oi(cambio_4h, cambio_24h, cambio_precio):
 # ============================================================
 
 def get_precio_actual(symbol="BTC/USDT"):
-    """Precio actual con stats 24h"""
+    """Precio actual con stats 24h — cacheado 60s"""
+    ahora = time.time()
+    if symbol in _PRECIO_CACHE and (ahora - _PRECIO_CACHE[symbol]["ts"]) < _DATA_TTL:
+        return _PRECIO_CACHE[symbol]["data"]
     ticker = exchange.fetch_ticker(symbol)
-    return {
+    result = {
         "precio":      ticker["last"],
         "alto_24h":    ticker["high"],
         "bajo_24h":    ticker["low"],
         "volumen_24h": ticker["quoteVolume"],
         "cambio_24h":  ticker["percentage"],
     }
+    _PRECIO_CACHE[symbol] = {"data": result, "ts": ahora}
+    return result
 
 def get_velas(symbol="BTC/USDT", timeframe="4h", limite=220):
-    """Velas OHLCV — 220 por defecto para tener historia suficiente para RSI 62"""
+    """Velas OHLCV — cacheadas 60s por (symbol, timeframe, limite)"""
+    ahora = time.time()
+    key = (symbol, timeframe, limite)
+    if key in _VELAS_CACHE and (ahora - _VELAS_CACHE[key]["ts"]) < _DATA_TTL:
+        return _VELAS_CACHE[key]["data"]
     velas = exchange.fetch_ohlcv(symbol, timeframe, limit=limite)
-    return [{
+    result = [{
         "fecha":   datetime.fromtimestamp(v[0]/1000).strftime("%Y-%m-%d %H:%M"),
         "open":    v[1],
         "high":    v[2],
@@ -133,9 +154,15 @@ def get_velas(symbol="BTC/USDT", timeframe="4h", limite=220):
         "close":   v[4],
         "volumen": v[5]
     } for v in velas]
+    _VELAS_CACHE[key] = {"data": result, "ts": ahora}
+    return result
 
 def get_funding_rate(symbol="BTC/USDT"):
-    """Funding rate actual de Binance Futures"""
+    """Funding rate actual de Binance Futures — cacheado 60s"""
+    ahora = time.time()
+    if symbol in _FUNDING_CACHE and (ahora - _FUNDING_CACHE[symbol]["ts"]) < _DATA_TTL:
+        return _FUNDING_CACHE[symbol]["data"]
+    result = None
     try:
         symbol_fut = symbol.replace("/", "")
         funding    = exchange_fut.fetch_funding_rate(symbol_fut)
@@ -143,12 +170,18 @@ def get_funding_rate(symbol="BTC/USDT"):
         rate = funding.get("fundingRate")
         if rate is None:
             rate = funding.get("lastFundingRate")
-        return round(float(rate) * 100, 4) if rate is not None else None
+        result = round(float(rate) * 100, 4) if rate is not None else None
     except Exception:
-        return None
+        pass
+    _FUNDING_CACHE[symbol] = {"data": result, "ts": ahora}
+    return result
 
 def get_open_interest(symbol="BTC/USDT"):
-    """OI actual + cambio % en 4H y 24H"""
+    """OI actual + cambio % en 4H y 24H — cacheado 60s"""
+    ts_ahora = time.time()
+    if symbol in _OI_CACHE and (ts_ahora - _OI_CACHE[symbol]["ts"]) < _DATA_TTL:
+        return _OI_CACHE[symbol]["data"]
+    result = {"valor": None, "cambio_4h": None, "cambio_24h": None}
     try:
         symbol_fut = symbol.replace("/", "")
         oi_hist    = exchange_fut.fetch_open_interest_history(symbol_fut, "1h", limit=25)
@@ -157,21 +190,22 @@ def get_open_interest(symbol="BTC/USDT"):
             def oi_val(entry):
                 return float(entry.get("openInterestAmount") or entry.get("openInterest") or 0)
 
-            ahora   = oi_val(oi_hist[-1])
-            hace4h  = oi_val(oi_hist[-5])
-            hace24h = oi_val(oi_hist[0])
+            oi_actual = oi_val(oi_hist[-1])
+            hace4h    = oi_val(oi_hist[-5])
+            hace24h   = oi_val(oi_hist[0])
 
-            cambio_4h  = round((ahora - hace4h)  / hace4h  * 100, 2) if hace4h  > 0 else 0
-            cambio_24h = round((ahora - hace24h) / hace24h * 100, 2) if hace24h > 0 else 0
+            cambio_4h  = round((oi_actual - hace4h)  / hace4h  * 100, 2) if hace4h  > 0 else 0
+            cambio_24h = round((oi_actual - hace24h) / hace24h * 100, 2) if hace24h > 0 else 0
 
-            return {
-                "valor":      round(ahora, 2),
+            result = {
+                "valor":      round(oi_actual, 2),
                 "cambio_4h":  cambio_4h,
                 "cambio_24h": cambio_24h,
             }
     except Exception:
         pass
-    return {"valor": None, "cambio_4h": None, "cambio_24h": None}
+    _OI_CACHE[symbol] = {"data": result, "ts": ts_ahora}
+    return result
 
 # ============================================================
 # CONTEXTO COMPLETO PARA TRADEBOT
@@ -273,6 +307,13 @@ Lectura:    {interpretar_oi(oi['cambio_4h'], oi['cambio_24h'], precio['cambio_24
         resumen += f"\n{color} {v['fecha']:<16} ${v['open']:>9,.0f} ${v['high']:>9,.0f} ${v['low']:>9,.0f} ${v['close']:>9,.0f}"
 
     resumen += "\n=== FIN DATOS DE MERCADO ==="
+
+    # ── DXY + BTC.D macro ──
+    try:
+        resumen += "\n" + get_macro_contexto()
+    except Exception:
+        pass
+
     return resumen
 
 # ============================================================
@@ -463,11 +504,18 @@ OI 4H: {f"{oi['cambio_4h']:+.2f}%" if oi.get('cambio_4h') is not None else "Sin 
 Sesgo macro: {sesgo_texto}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""
 
+        # ── DXY + BTC.D — agregar al bloque_contexto ──
+        try:
+            macro_extra = get_macro_contexto()
+            bloque_contexto = bloque_contexto.strip() + "\n" + macro_extra
+        except Exception:
+            bloque_contexto = bloque_contexto.strip()
+
         return {
             "regimen":         regimen,
             "emoji":           emoji,
             "sesgo":           sesgo_texto,
-            "bloque_contexto": bloque_contexto.strip(),
+            "bloque_contexto": bloque_contexto,
             "precio":          precio,
             "ema200d":         ema200d,
             "rsi":             rsi,
@@ -483,3 +531,352 @@ Sesgo macro: {sesgo_texto}
             "bloque_contexto": "",
             "error":           str(e),
         }
+
+
+# ============================================================
+# FASE 1 — UPGRADES QUANT
+# ============================================================
+
+def calcular_atr(velas: list, periodo: int = 14) -> float | None:
+    """
+    Average True Range — volatilidad real del mercado.
+
+    True Range = max(H-L, |H-Cp|, |L-Cp|)
+    ATR = EMA(True Range, periodo)
+
+    Uso:
+        SL sugerido = entrada ± (1.5 × ATR)
+        ATR alto    → mercado volátil → SL más amplio
+        ATR bajo    → mercado comprimido → posible breakout
+    """
+    try:
+        if len(velas) < periodo + 1:
+            return None
+        trs = []
+        for i in range(1, len(velas)):
+            h  = velas[i]["high"]
+            l  = velas[i]["low"]
+            cp = velas[i-1]["close"]
+            tr = max(h - l, abs(h - cp), abs(l - cp))
+            trs.append(tr)
+        # EMA del True Range
+        atr = calcular_ema(trs, periodo)
+        return round(atr, 2) if atr else None
+    except Exception:
+        return None
+
+
+def calcular_conviccion(
+    precio: float,
+    ema200d: float | None,
+    rsi: float | None,
+    emas_4h: list,
+    funding: float | None,
+    oi_cambio_4h: float | None,
+) -> dict:
+    """
+    Score de convicción institucional 0-100.
+
+    Convicción = Σ(peso_i × señal_normalizada_i) × 100
+
+    Pesos (suman 1.0):
+        EMA200 Daily  = 0.30  ← macro es lo más importante
+        RSI 62        = 0.20
+        EMAs 4H       = 0.20
+        Funding Rate  = 0.15
+        OI 4H         = 0.15
+
+    Señales normalizadas [0, 1]:
+        0.0 = máxima convicción BAJISTA
+        0.5 = neutral
+        1.0 = máxima convicción ALCISTA
+
+    Retorna:
+        score      : 0-100 (50 = neutral)
+        direccion  : ALCISTA | BAJISTA | NEUTRAL
+        conviccion : ALTA | MEDIA | BAJA
+        detalle    : dict con contribución de cada factor
+    """
+    señales = {}
+
+    # ── Factor 1: EMA200 Daily (peso 0.30) ───────────────────
+    if ema200d and precio:
+        distancia = (precio - ema200d) / ema200d  # [-1, +1] aprox
+        # Normalizar: ±15% = extremo, clamp a [-0.15, +0.15]
+        dist_clamp = max(-0.15, min(0.15, distancia))
+        señal_ema200d = (dist_clamp + 0.15) / 0.30  # → [0, 1]
+    else:
+        señal_ema200d = 0.5  # neutral si no hay dato
+    señales["ema200d"] = {"valor": señal_ema200d, "peso": 0.30}
+
+    # ── Factor 2: RSI 62 (peso 0.20) ─────────────────────────
+    if rsi is not None:
+        # RSI 0-100 → normalizar: 30=bajista_extremo, 70=alcista_extremo
+        rsi_clamp = max(20, min(80, rsi))
+        señal_rsi = (rsi_clamp - 20) / 60  # → [0, 1]
+    else:
+        señal_rsi = 0.5
+    señales["rsi"] = {"valor": señal_rsi, "peso": 0.20}
+
+    # ── Factor 3: EMAs 4H alineadas (peso 0.20) ───────────────
+    if emas_4h and precio:
+        validas = [e for e in emas_4h if e is not None]
+        if validas:
+            sobre = sum(1 for e in validas if precio > e)
+            señal_emas = sobre / len(validas)  # → [0, 1]
+        else:
+            señal_emas = 0.5
+    else:
+        señal_emas = 0.5
+    señales["emas_4h"] = {"valor": señal_emas, "peso": 0.20}
+
+    # ── Factor 4: Funding Rate (peso 0.15) ────────────────────
+    # Funding negativo → retail short → señal ALCISTA
+    # Funding positivo → retail long → señal BAJISTA
+    if funding is not None:
+        # Clamp a [-0.15%, +0.15%]
+        f_clamp = max(-0.15, min(0.15, funding))
+        # Invertir: funding negativo = alcista (señal alta)
+        señal_funding = (-f_clamp + 0.15) / 0.30  # → [0, 1]
+    else:
+        señal_funding = 0.5
+    señales["funding"] = {"valor": señal_funding, "peso": 0.15}
+
+    # ── Factor 5: OI 4H (peso 0.15) ──────────────────────────
+    # OI↑ = capital entrando (confirma tendencia)
+    # OI↓ = capital saliendo (debilita tendencia)
+    if oi_cambio_4h is not None:
+        oi_clamp = max(-5.0, min(5.0, oi_cambio_4h))
+        señal_oi = (oi_clamp + 5.0) / 10.0  # → [0, 1]
+    else:
+        señal_oi = 0.5
+    señales["oi_4h"] = {"valor": señal_oi, "peso": 0.15}
+
+    # ── Score final ponderado ─────────────────────────────────
+    score_raw = sum(s["valor"] * s["peso"] for s in señales.values())
+    score = round(score_raw * 100)  # 0-100
+
+    # ── Interpretación ────────────────────────────────────────
+    desviacion = abs(score - 50)  # 0=neutral, 50=extremo
+
+    if score >= 65:
+        direccion = "ALCISTA"
+    elif score <= 35:
+        direccion = "BAJISTA"
+    else:
+        direccion = "NEUTRAL"
+
+    if desviacion >= 30:
+        conviccion = "ALTA"
+    elif desviacion >= 15:
+        conviccion = "MEDIA"
+    else:
+        conviccion = "BAJA"
+
+    return {
+        "score":      score,
+        "direccion":  direccion,
+        "conviccion": conviccion,
+        "señales":    señales,
+        "label":      f"{direccion} — Convicción {conviccion} ({score}/100)",
+    }
+
+
+def calcular_p_min_breakeven(rr: float) -> float:
+    """
+    Probabilidad mínima de éxito para ser matemáticamente rentable.
+
+    Fórmula de Jane Street / Kelly:
+        P_min = 1 / (1 + R:R)
+
+    Ejemplos:
+        R:R 1:1 → P_min = 50.0%  (necesitas ganar 1 de cada 2)
+        R:R 2:1 → P_min = 33.3%  (necesitas ganar 1 de cada 3)
+        R:R 3:1 → P_min = 25.0%  (necesitas ganar 1 de cada 4)
+
+    Si tu win rate histórico > P_min → estrategia matemáticamente viable
+    """
+    if rr <= 0:
+        return 100.0
+    return round(100 / (1 + rr), 1)
+
+
+def calcular_kelly(p_win: float, rr: float) -> dict:
+    """
+    Criterio de Kelly — tamaño óptimo de posición.
+
+    Kelly% = (P_win × RR - P_loss) / RR
+           = (P_win × RR - (1 - P_win)) / RR
+
+    Donde:
+        P_win = probabilidad de ganar (0-1)
+        RR    = Risk:Reward ratio
+        P_loss = 1 - P_win
+
+    Kelly fraccional (recomendado): Kelly% / 2
+    Nunca usar Kelly% completo — demasiado agresivo para crypto
+
+    Retorna:
+        kelly_pct      : % óptimo teórico (0-100)
+        kelly_fraccional: % recomendado = kelly/2
+        interpretacion : texto para el usuario
+    """
+    try:
+        p_loss = 1 - p_win
+        kelly_decimal = (p_win * rr - p_loss) / rr
+        kelly_pct = round(kelly_decimal * 100, 1)
+        kelly_frac = round(kelly_pct / 2, 1)
+
+        if kelly_pct <= 0:
+            interpretacion = "Edge negativo — esta estrategia pierde dinero a largo plazo."
+        elif kelly_frac <= 1:
+            interpretacion = f"Kelly fraccional: {kelly_frac}% del capital por trade. Edge muy pequeño."
+        elif kelly_frac <= 5:
+            interpretacion = f"Kelly fraccional: {kelly_frac}% del capital por trade. Edge moderado."
+        else:
+            interpretacion = f"Kelly fraccional: {kelly_frac}% del capital por trade. Edge sólido — no exceder."
+
+        return {
+            "kelly_pct":       kelly_pct,
+            "kelly_fraccional": kelly_frac,
+            "interpretacion":  interpretacion,
+            "viable":          kelly_pct > 0,
+        }
+    except Exception:
+        return {"kelly_pct": 0, "kelly_fraccional": 0, "interpretacion": "Error en cálculo", "viable": False}
+
+
+# ============================================================
+# FASE 3 — DXY + BTC DOMINANCE EN TIEMPO REAL
+# ============================================================
+
+_DXY_CACHE   = {"valor": None, "ts": 0}
+_BTCD_CACHE  = {"valor": None, "ts": 0}
+_CACHE_TTL   = 600  # 10 minutos
+
+def get_dxy() -> dict:
+    """
+    DXY (US Dollar Index) via yfinance — gratis, sin API key.
+    Ticker: DX-Y.NYB
+    Cacheado 10 minutos para no spamear.
+    """
+    ahora = time.time()
+    if _DXY_CACHE["valor"] and (ahora - _DXY_CACHE["ts"]) < _CACHE_TTL:
+        return _DXY_CACHE["valor"]
+    try:
+        import yfinance as yf
+        ticker = yf.Ticker("DX-Y.NYB")
+        hist   = ticker.history(period="5d")
+        if hist.empty or len(hist) < 2:
+            raise ValueError("Sin datos de yfinance para DXY")
+        dxy_ayer = float(hist["Close"].iloc[-2])
+        dxy_hoy  = float(hist["Close"].iloc[-1])
+        cambio   = round(((dxy_hoy - dxy_ayer) / dxy_ayer) * 100, 2)
+        resultado = {
+            "valor":   round(dxy_hoy, 2),
+            "cambio":  cambio,
+            "lectura": _interpretar_dxy(dxy_hoy, cambio),
+            "error":   None,
+        }
+        _DXY_CACHE["valor"] = resultado
+        _DXY_CACHE["ts"]    = ahora
+        return resultado
+    except Exception as e:
+        return {"valor": None, "cambio": None, "lectura": "Sin datos", "error": str(e)}
+
+
+def _interpretar_dxy(valor: float, cambio: float) -> str:
+    """Interpreta el DXY en funcion de su nivel y movimiento."""
+    if valor is None:
+        return "Sin datos"
+    # Niveles historicos de referencia
+    if valor > 106:
+        nivel = "DXY FUERTE (>106) — presion bajista sobre BTC"
+    elif valor > 103:
+        nivel = "DXY ELEVADO (103-106) — viento en contra para crypto"
+    elif valor > 100:
+        nivel = "DXY NEUTRAL-ALTO (100-103) — sin sesgo claro"
+    elif valor > 97:
+        nivel = "DXY MODERADO (97-100) — ambiente constructivo para risk-on"
+    else:
+        nivel = "DXY DEBIL (<97) — viento a favor para BTC"
+
+    if cambio is not None:
+        if cambio >= 0.3:
+            mov = f"subiendo {cambio:+.2f}% hoy — presion bajista sobre crypto"
+        elif cambio <= -0.3:
+            mov = f"cayendo {cambio:+.2f}% hoy — impulso alcista para crypto"
+        else:
+            mov = f"estable ({cambio:+.2f}%)"
+        return f"{nivel} | {mov}"
+    return nivel
+
+
+def get_btc_dominance() -> dict:
+    """
+    BTC Dominance via CoinGecko API publica (sin key).
+    BTC.D = % del market cap total que representa Bitcoin.
+    Cacheado 10 minutos.
+
+    Interpretacion institucional:
+        BTC.D subiendo → capital fluyendo a BTC (risk-off en crypto)
+        BTC.D bajando  → capital rotando a altcoins (alt season)
+        BTC.D > 55%    → dominancia alta, altcoins en riesgo
+        BTC.D < 45%    → rotacion a alts, posible alt season
+    """
+    ahora = time.time()
+    if _BTCD_CACHE["valor"] and (ahora - _BTCD_CACHE["ts"]) < _CACHE_TTL:
+        return _BTCD_CACHE["valor"]
+    try:
+        url = "https://api.coingecko.com/api/v3/global"
+        r   = _requests.get(url, timeout=8)
+        r.raise_for_status()
+        data = r.json()["data"]
+        btcd = round(data["market_cap_percentage"]["btc"], 2)
+        resultado = {
+            "valor":   btcd,
+            "lectura": _interpretar_btcd(btcd),
+            "error":   None,
+        }
+        _BTCD_CACHE["valor"] = resultado
+        _BTCD_CACHE["ts"]    = ahora
+        return resultado
+    except Exception as e:
+        return {"valor": None, "lectura": "Sin datos", "error": str(e)}
+
+
+def _interpretar_btcd(btcd: float) -> str:
+    """Interpreta BTC Dominance en clave institucional."""
+    if btcd is None:
+        return "Sin datos"
+    if btcd >= 60:
+        return f"BTC.D {btcd}% — Dominancia extrema. Alts en riesgo, capital refugiado en BTC"
+    elif btcd >= 55:
+        return f"BTC.D {btcd}% — Dominancia alta. Mercado risk-off dentro de crypto"
+    elif btcd >= 50:
+        return f"BTC.D {btcd}% — Dominancia moderada. BTC lidera, alts siguen"
+    elif btcd >= 45:
+        return f"BTC.D {btcd}% — Zona de transicion. Posible rotacion a altcoins"
+    else:
+        return f"BTC.D {btcd}% — Dominancia baja. Alt season activa o en formacion"
+
+
+def get_macro_contexto() -> str:
+    """
+    Bloque de contexto macro combinado DXY + BTC.D.
+    Listo para inyectar en get_contexto_mercado() y get_regimen_mercado().
+    """
+    dxy  = get_dxy()
+    btcd = get_btc_dominance()
+
+    dxy_str  = f"{dxy['valor']:.2f}"  if dxy['valor']  else "Sin datos"
+    btcd_str = f"{btcd['valor']:.2f}%" if btcd['valor'] else "Sin datos"
+
+    return f"""
+━━━ DXY + BTC DOMINANCE ━━━━━━━━━━━━━━━━━━
+DXY (Dolar Index): {dxy_str}  {f"({dxy['cambio']:+.2f}% hoy)" if dxy['cambio'] is not None else ""}
+Lectura:           {dxy['lectura']}
+
+BTC Dominance:     {btcd_str}
+Lectura:           {btcd['lectura']}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"""

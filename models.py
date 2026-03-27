@@ -166,3 +166,143 @@ class HistorialChat(db.Model):
         """Borra todo el historial del usuario — útil para el botón 'Nueva conversación'"""
         HistorialChat.query.filter_by(usuario_id=usuario_id).delete()
         db.session.commit()
+
+class Journal(db.Model):
+    """
+    Registro de trades del usuario — killer feature V2.5
+    Cada trade registrado alimenta el análisis IA de patrones.
+
+    Campos del trade:
+    - activo      : BTC/USDT, ETH/USDT, etc.
+    - direccion   : LONG | SHORT
+    - entrada     : precio de entrada
+    - sl          : stop loss
+    - tp          : take profit
+    - resultado   : WIN | LOSS | BE (break even)
+    - pnl         : ganancia/pérdida en % o USDT
+    - rr_real     : R:R real obtenido (no el planeado)
+    - timeframe   : 4H | 1D | 1H etc.
+    - notas       : observaciones del trader
+    - fecha       : cuándo se ejecutó el trade
+    - ia_feedback : análisis rápido de la IA (se genera al guardar)
+    """
+    __tablename__ = "journal"
+
+    id          = db.Column(db.Integer, primary_key=True)
+    usuario_id  = db.Column(db.Integer, db.ForeignKey("usuarios.id"), nullable=False)
+
+    # ── Datos del trade ──────────────────────────────────────
+    activo      = db.Column(db.Text, nullable=False)              # BTC/USDT
+    direccion   = db.Column(db.Text, nullable=False)              # LONG | SHORT
+    entrada     = db.Column(db.Float, nullable=False)             # precio entrada
+    sl          = db.Column(db.Float, nullable=True)              # stop loss
+    tp          = db.Column(db.Float, nullable=True)              # take profit
+    resultado   = db.Column(db.Text, nullable=True)               # WIN | LOSS | BE
+    pnl         = db.Column(db.Float, nullable=True)              # % ganancia/pérdida
+    rr_planeado = db.Column(db.Float, nullable=True)              # R:R antes de entrar
+    rr_real     = db.Column(db.Float, nullable=True)              # R:R real obtenido
+    timeframe   = db.Column(db.Text, nullable=True)               # 4H | 1D | 1H
+    notas       = db.Column(db.Text, nullable=True)               # observaciones
+    fecha_trade = db.Column(db.Date, default=date.today)          # cuándo se ejecutó
+    creado_en   = db.Column(db.DateTime, default=datetime.utcnow) # cuándo se registró
+
+    # ── Análisis IA ──────────────────────────────────────────
+    ia_feedback = db.Column(db.Text, nullable=True)   # análisis rápido al guardar
+    ia_analizado = db.Column(db.Boolean, default=False)  # ya fue incluido en análisis profundo
+
+    __table_args__ = (
+        db.Index("ix_journal_usuario_fecha", "usuario_id", "fecha_trade"),
+    )
+
+    def to_dict(self) -> dict:
+        return {
+            "id"          : self.id,
+            "activo"      : self.activo,
+            "direccion"   : self.direccion,
+            "entrada"     : self.entrada,
+            "sl"          : self.sl,
+            "tp"          : self.tp,
+            "resultado"   : self.resultado,
+            "pnl"         : self.pnl,
+            "rr_planeado" : self.rr_planeado,
+            "rr_real"     : self.rr_real,
+            "timeframe"   : self.timeframe,
+            "notas"       : self.notas,
+            "fecha_trade" : str(self.fecha_trade),
+            "creado_en"   : self.creado_en.strftime("%Y-%m-%d %H:%M"),
+            "ia_feedback" : self.ia_feedback,
+        }
+
+    # ── Métodos de consulta ──────────────────────────────────
+
+    @staticmethod
+    def listar(usuario_id: int, limite: int = 50) -> list:
+        """Últimos N trades del usuario, más recientes primero"""
+        registros = (
+            Journal.query
+            .filter_by(usuario_id=usuario_id)
+            .order_by(Journal.fecha_trade.desc(), Journal.creado_en.desc())
+            .limit(limite)
+            .all()
+        )
+        return [r.to_dict() for r in registros]
+
+    @staticmethod
+    def stats(usuario_id: int) -> dict:
+        """
+        Calcula estadísticas agregadas del usuario.
+        Usado por el dashboard y el análisis profundo de IA.
+        """
+        trades = Journal.query.filter_by(usuario_id=usuario_id).all()
+
+        if not trades:
+            return {"total": 0}
+
+        total   = len(trades)
+        wins    = sum(1 for t in trades if t.resultado == "WIN")
+        losses  = sum(1 for t in trades if t.resultado == "LOSS")
+        be      = sum(1 for t in trades if t.resultado == "BE")
+
+        # R:R promedio solo de trades con dato real
+        rr_vals = [t.rr_real for t in trades if t.rr_real is not None]
+        rr_prom = round(sum(rr_vals) / len(rr_vals), 2) if rr_vals else None
+
+        # PnL total
+        pnl_vals = [t.pnl for t in trades if t.pnl is not None]
+        pnl_total = round(sum(pnl_vals), 2) if pnl_vals else None
+
+        # Win rate por activo
+        activos = {}
+        for t in trades:
+            if t.activo not in activos:
+                activos[t.activo] = {"total": 0, "wins": 0}
+            activos[t.activo]["total"] += 1
+            if t.resultado == "WIN":
+                activos[t.activo]["wins"] += 1
+
+        for a in activos:
+            activos[a]["win_rate"] = round(
+                activos[a]["wins"] / activos[a]["total"] * 100, 1
+            )
+
+        # Racha actual
+        racha = 0
+        if trades:
+            ultimo = trades[-1].resultado
+            for t in reversed(trades):
+                if t.resultado == ultimo:
+                    racha += 1
+                else:
+                    break
+
+        return {
+            "total"      : total,
+            "wins"       : wins,
+            "losses"     : losses,
+            "be"         : be,
+            "win_rate"   : round(wins / total * 100, 1) if total > 0 else 0,
+            "rr_promedio": rr_prom,
+            "pnl_total"  : pnl_total,
+            "por_activo" : activos,
+            "racha_actual": {"resultado": trades[-1].resultado if trades else None, "count": racha},
+        }
