@@ -473,12 +473,26 @@ function actualizarSidebar(symbol) {
     ? `<div class="price-change ${esSubida ? 'up' : 'down'}">${esSubida ? '▲' : '▼'} ${Math.abs(cambio)}%</div>`
     : '';
 
+  const fmtP = (n) => n ? '$' + Number(n).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0}) : '—';
+  const alto = d.alto_24h ? fmtP(d.alto_24h) : '—';
+  const bajo = d.bajo_24h ? fmtP(d.bajo_24h) : '—';
+
   if (priceCard) priceCard.innerHTML = `
     <div class="price-top">
       <div class="price-symbol">${symbol}/USDT <span class="live-badge">LIVE</span></div>
       ${cambioHtml}
     </div>
     <div class="price-value">${precio}</div>
+    <div class="price-stats">
+      <div class="price-stat">
+        <div class="price-stat-label">Alto 24h</div>
+        <div class="price-stat-val">${alto}</div>
+      </div>
+      <div class="price-stat">
+        <div class="price-stat-label">Bajo 24h</div>
+        <div class="price-stat-val">${bajo}</div>
+      </div>
+    </div>
   `;
 
   // Indicadores
@@ -527,6 +541,46 @@ setInterval(cargarMercado, 120000);
 
 // Botón refresh también recarga mercado
 btnRefresh.addEventListener('click', cargarMercado);
+
+// ═══════════════════════════════════════
+// MACRO — DXY + BTC Dominance
+// ═══════════════════════════════════════
+async function cargarMacro() {
+  try {
+    const res  = await fetch('/macro');
+    const data = await res.json();
+
+    // DXY
+    const dxyValEl  = document.getElementById('dxy-val');
+    const dxyChgEl  = document.getElementById('dxy-chg');
+    if (dxyValEl && data.dxy && data.dxy.valor) {
+      dxyValEl.textContent = data.dxy.valor.toFixed(2);
+      if (dxyChgEl) {
+        const chg = data.dxy.cambio || 0;
+        dxyChgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+        dxyChgEl.className = 'ind-val ' + (chg > 0 ? 'down' : chg < 0 ? 'up' : 'neutral');
+      }
+    }
+
+    // BTC Dominance
+    const btcdValEl = document.getElementById('btcd-val');
+    const btcdChgEl = document.getElementById('btcd-chg');
+    if (btcdValEl && data.btcd && data.btcd.valor) {
+      btcdValEl.textContent = data.btcd.valor.toFixed(2) + '%';
+      if (btcdChgEl) {
+        const chg = data.btcd.cambio || 0;
+        btcdChgEl.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+        btcdChgEl.className = 'ind-val ' + (chg > 0 ? 'up' : chg < 0 ? 'down' : 'neutral');
+      }
+    }
+  } catch(e) {
+    // silencioso
+  }
+}
+
+cargarMacro();
+setInterval(cargarMacro, 300000); // cada 5 min (yfinance es lento)
+btnRefresh.addEventListener('click', cargarMacro);
 
 // ═══════════════════════════════════════
 // THEME TOGGLE — Dark / Light
