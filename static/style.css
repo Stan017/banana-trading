@@ -287,55 +287,137 @@ body {
   position: relative;
 }
 
-/* Header */
+/* ==============================================
+   HEADER — Layout 3 zonas
+============================================== */
 .top-header {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 0 16px;
+  padding: 14px 0;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  position: relative;
 }
-.header-left { display: flex; align-items: center; gap: 14px; }
+
+/* IZQUIERDA */
+.header-left { display: flex; align-items: center; }
 .sidebar-toggle {
   width: 34px; height: 34px;
-  background: var(--bg2);
-  border: 1px solid var(--border2);
-  border-radius: 9px;
-  color: var(--text2);
-  cursor: pointer;
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 9px; color: var(--text2); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s, color 0.15s;
-  flex-shrink: 0;
+  transition: background 0.15s, color 0.15s; flex-shrink: 0;
 }
 .sidebar-toggle:hover { background: var(--bg3); color: var(--text); }
-.header-eyebrow {
-  font-size: 10px; font-weight: 600;
-  color: var(--blue); letter-spacing: 1.2px;
-  text-transform: uppercase; display: block; margin-bottom: 2px;
+
+/* CENTRO — absoluto para que quede justo en el medio */
+.header-center {
+  position: absolute; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px;
+  pointer-events: none;
 }
-.header-title h1 {
-  font-size: 20px; font-weight: 700;
-  color: var(--text); letter-spacing: -0.5px; line-height: 1;
+.header-logo {
+  width: 34px; height: 34px; object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(245,197,24,0.3));
+  flex-shrink: 0;
 }
-.header-title h1 em {
+.header-brand-text { display: flex; flex-direction: column; line-height: 1.2; }
+.header-brand-name { font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: -0.4px; }
+.header-brand-name em {
   font-style: normal;
   background: linear-gradient(90deg, var(--blue), var(--green));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
 }
+.header-brand-sub { font-size: 10px; color: var(--text3); font-weight: 400; letter-spacing: 0.3px; }
+
+/* DERECHA */
+.header-right { display: flex; align-items: center; gap: 8px; }
+
+/* Status pill */
 .status-pill {
   display: flex; align-items: center; gap: 7px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 5px 12px;
-  font-size: 12px; font-weight: 500; color: var(--text2);
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 20px; padding: 5px 11px;
+  font-size: 11.5px; font-weight: 500; color: var(--text2);
+  white-space: nowrap;
 }
 .status-dot {
   width: 6px; height: 6px; border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 6px var(--green);
+  background: var(--green); box-shadow: 0 0 6px var(--green);
   animation: pulse 2s ease-in-out infinite;
 }
 .status-pill.thinking .status-dot { background: var(--blue); box-shadow: 0 0 6px var(--blue); }
+
+/* USER CHIP */
+.user-chip { position: relative; }
+.user-chip-btn {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 5px 10px 5px 6px;
+  cursor: pointer; font-family: var(--sans);
+  transition: background 0.15s, border-color 0.15s; color: var(--text);
+}
+.user-chip-btn:hover { background: var(--bg3); border-color: rgba(37,99,235,0.3); }
+.user-chip.open .user-chip-btn { border-color: rgba(37,99,235,0.4); background: var(--bg3); }
+.user-chip-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green); box-shadow: 0 0 5px var(--green); flex-shrink: 0;
+}
+.user-chip-avatar {
+  width: 22px; height: 22px; border-radius: 6px;
+  object-fit: cover; border: 1px solid var(--border2);
+  background: var(--bg3); flex-shrink: 0;
+}
+.user-chip-name {
+  font-size: 12.5px; font-weight: 600; color: var(--text);
+  max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.chip-chevron { color: var(--text3); transition: transform 0.2s; flex-shrink: 0; }
+.user-chip.open .chip-chevron { transform: rotate(180deg); }
+
+/* DROPDOWN */
+.user-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: 240px; background: var(--bg1);
+  border: 1px solid var(--border2); border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.2);
+  z-index: 500; overflow: hidden;
+  opacity: 0; transform: translateY(-6px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.user-chip.open .user-dropdown {
+  opacity: 1; transform: translateY(0) scale(1); pointer-events: auto;
+}
+.dd-user-info { display: flex; align-items: center; gap: 10px; padding: 14px 14px 12px; }
+.dd-avatar {
+  width: 38px; height: 38px; border-radius: 9px;
+  object-fit: cover; border: 1px solid var(--border2);
+  background: var(--bg3); flex-shrink: 0;
+}
+.dd-user-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dd-user-name { font-size: 13px; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dd-plan-badge {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
+  background: var(--blue-dim); color: var(--blue);
+  border: 1px solid rgba(37,99,235,0.2); border-radius: 4px;
+  padding: 1px 6px; align-self: flex-start;
+}
+.dd-plan-badge.pro { background: var(--green-dim); color: var(--green); border-color: rgba(0,212,170,0.2); }
+.dd-sep { height: 1px; background: var(--border); margin: 4px 0; }
+.dd-item {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 9px 14px;
+  background: transparent; border: none; color: var(--text2);
+  font-family: var(--sans); font-size: 13px; font-weight: 500;
+  text-decoration: none; cursor: pointer;
+  transition: background 0.12s, color 0.12s; text-align: left;
+}
+.dd-item:hover { background: var(--bg3); color: var(--text); }
+.dd-icon { width: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--text3); }
+.dd-item:hover .dd-icon { color: var(--text2); }
+.dd-logout-item:hover { background: var(--red-dim); color: var(--red); }
+.dd-logout-item:hover .dd-icon { color: var(--red); }
+[data-theme="light"] .user-dropdown { box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
 
 /* Chat area */
 .chat-area {

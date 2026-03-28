@@ -583,22 +583,86 @@ setInterval(cargarMacro, 300000); // cada 5 min (yfinance es lento)
 btnRefresh.addEventListener('click', cargarMacro);
 
 // ═══════════════════════════════════════
-// THEME TOGGLE — Dark / Light
+// THEME — init desde localStorage
 // ═══════════════════════════════════════
 (function initTheme() {
   const saved = localStorage.getItem('theme') || 'dark';
   document.documentElement.setAttribute('data-theme', saved);
 })();
 
-const themeToggle = document.getElementById('theme-toggle');
-if (themeToggle) {
-  themeToggle.addEventListener('click', () => {
-    const current = document.documentElement.getAttribute('data-theme');
-    const next = current === 'light' ? 'dark' : 'light';
-    document.documentElement.setAttribute('data-theme', next);
-    localStorage.setItem('theme', next);
+function toggleTheme() {
+  const cur  = document.documentElement.getAttribute('data-theme');
+  const next = cur === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  // Actualizar label en dropdown
+  const label = document.getElementById('dd-theme-label');
+  if (label) label.textContent = next === 'light' ? 'Modo oscuro' : 'Modo claro';
+}
+
+const ddThemeBtn = document.getElementById('dd-theme-btn');
+if (ddThemeBtn) ddThemeBtn.addEventListener('click', toggleTheme);
+
+// Inicializar label del tema
+(function() {
+  const cur = localStorage.getItem('theme') || 'dark';
+  const label = document.getElementById('dd-theme-label');
+  if (label) label.textContent = cur === 'light' ? 'Modo oscuro' : 'Modo claro';
+})();
+
+// ═══════════════════════════════════════
+// USER CHIP DROPDOWN — open / close
+// ═══════════════════════════════════════
+const userChip    = document.getElementById('user-chip');
+const userChipBtn = document.getElementById('user-chip-btn');
+const userDropdown = document.getElementById('user-dropdown');
+
+if (userChipBtn) {
+  userChipBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    userChip.classList.toggle('open');
   });
 }
+
+// Cerrar al hacer click fuera
+document.addEventListener('click', (e) => {
+  if (userChip && !userChip.contains(e.target)) {
+    userChip.classList.remove('open');
+  }
+});
+
+// Cerrar con Escape
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && userChip) userChip.classList.remove('open');
+});
+
+// ═══════════════════════════════════════
+// CARGAR USUARIO — rellenar dropdown
+// ═══════════════════════════════════════
+fetch('/me').then(r => r.json()).then(data => {
+  if (!data.usuario) return;
+  const u = data.usuario;
+
+  const chip     = document.getElementById('user-chip');
+  const statusP  = document.getElementById('status-pill');
+  const avatar   = document.getElementById('user-avatar');
+  const name     = document.getElementById('user-name');
+  const ddAvatar = document.getElementById('dd-avatar');
+  const ddName   = document.getElementById('dd-user-name');
+  const ddPlan   = document.getElementById('dd-plan-badge');
+
+  if (chip)    chip.style.display  = 'flex';
+  if (statusP) statusP.style.display = 'none';  // dot verde ya en el chip
+  if (avatar)  avatar.src = u.foto_url || '';
+  if (name)    name.textContent = (u.nombre || u.email || '').split(' ')[0];
+  if (ddAvatar) ddAvatar.src = u.foto_url || '';
+  if (ddName)   ddName.textContent = u.nombre || u.email || '';
+  if (ddPlan) {
+    const plan = u.plan || 'free';
+    ddPlan.textContent = plan === 'pro' ? 'Pro' : 'Free';
+    if (plan === 'pro') ddPlan.classList.add('pro');
+  }
+}).catch(() => {});
 
 // ═══════════════════════════════════════
 // LANGUAGE TOGGLE — ES / EN
@@ -692,12 +756,9 @@ function applyLang(lang) {
   const logoutBtn = document.getElementById('logout-btn');
   if (logoutBtn) logoutBtn.title = t.logoutTitle;
 
-  // Lang toggle button label — show opposite lang
-  const langToggle = document.getElementById('lang-toggle');
-  if (langToggle) {
-    langToggle.textContent = lang === 'es' ? 'EN' : 'ES';
-    langToggle.setAttribute('data-lang', lang);
-  }
+  // Actualizar label del dropdown
+  const ddLbl = document.getElementById('dd-lang-label');
+  if (ddLbl) ddLbl.textContent = lang === 'es' ? 'English' : 'Español';
 
   // Status pill — only if currently online (not thinking)
   const statusText = statusPill ? statusPill.querySelector('[data-i18n="online"]') : null;
@@ -721,14 +782,21 @@ function setStatus(estado) {
   }
 }
 
-// Lang toggle button
-const langToggleBtn = document.getElementById('lang-toggle');
-if (langToggleBtn) {
-  langToggleBtn.addEventListener('click', () => {
+// Lang toggle — ahora en el dropdown
+const ddLangBtn = document.getElementById('dd-lang-btn');
+if (ddLangBtn) {
+  ddLangBtn.addEventListener('click', () => {
     const next = currentLang === 'es' ? 'en' : 'es';
     applyLang(next);
   });
 }
 
+// Actualizar label idioma en dropdown
+function updateLangLabel(lang) {
+  const label = document.getElementById('dd-lang-label');
+  if (label) label.textContent = lang === 'es' ? 'English' : 'Español';
+}
+
 // Apply saved language on load
 applyLang(currentLang);
+updateLangLabel(currentLang);
