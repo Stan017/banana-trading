@@ -585,10 +585,7 @@ btnRefresh.addEventListener('click', cargarMacro);
 // ═══════════════════════════════════════
 // THEME — init desde localStorage
 // ═══════════════════════════════════════
-(function initTheme() {
-  const saved = localStorage.getItem('theme') || 'dark';
-  document.documentElement.setAttribute('data-theme', saved);
-})();
+// Tema: manejado por ui.js;
 
 function toggleTheme() {
   const cur  = document.documentElement.getAttribute('data-theme');
@@ -610,59 +607,12 @@ if (ddThemeBtn) ddThemeBtn.addEventListener('click', toggleTheme);
   if (label) label.textContent = cur === 'light' ? 'Modo oscuro' : 'Modo claro';
 })();
 
-// ═══════════════════════════════════════
-// USER CHIP DROPDOWN — open / close
-// ═══════════════════════════════════════
-const userChip    = document.getElementById('user-chip');
-const userChipBtn = document.getElementById('user-chip-btn');
-const userDropdown = document.getElementById('user-dropdown');
-
-if (userChipBtn) {
-  userChipBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    userChip.classList.toggle('open');
-  });
-}
-
-// Cerrar al hacer click fuera
-document.addEventListener('click', (e) => {
-  if (userChip && !userChip.contains(e.target)) {
-    userChip.classList.remove('open');
-  }
-});
-
-// Cerrar con Escape
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && userChip) userChip.classList.remove('open');
-});
+// Dropdown: inicializado por ui.js (uiInitDropdown)
 
 // ═══════════════════════════════════════
 // CARGAR USUARIO — rellenar dropdown
 // ═══════════════════════════════════════
-fetch('/me').then(r => r.json()).then(data => {
-  if (!data.usuario) return;
-  const u = data.usuario;
-
-  const chip     = document.getElementById('user-chip');
-  const statusP  = document.getElementById('status-pill');
-  const avatar   = document.getElementById('user-avatar');
-  const name     = document.getElementById('user-name');
-  const ddAvatar = document.getElementById('dd-avatar');
-  const ddName   = document.getElementById('dd-user-name');
-  const ddPlan   = document.getElementById('dd-plan-badge');
-
-  if (chip)    chip.style.display  = 'flex';
-  if (statusP) statusP.style.display = 'none';  // dot verde ya en el chip
-  if (avatar)  avatar.src = u.foto_url || '';
-  if (name)    name.textContent = (u.nombre || u.email || '').split(' ')[0];
-  if (ddAvatar) ddAvatar.src = u.foto_url || '';
-  if (ddName)   ddName.textContent = u.nombre || u.email || '';
-  if (ddPlan) {
-    const plan = u.plan || 'free';
-    ddPlan.textContent = plan === 'pro' ? 'Pro' : 'Free';
-    if (plan === 'pro') ddPlan.classList.add('pro');
-  }
-}).catch(() => {});
+// Usuario: cargado por ui.js
 
 // ═══════════════════════════════════════
 // LANGUAGE TOGGLE — ES / EN

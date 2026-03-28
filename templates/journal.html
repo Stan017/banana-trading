@@ -685,15 +685,7 @@
 
   <!-- BOTTOM -->
   <div class="sb-block sb-bottom">
-    <div class="user-pill" id="user-pill" style="display:none;margin-bottom:10px">
-      <img class="user-avatar" id="user-avatar" src="" alt="">
-      <span class="user-name" id="user-name"></span>
-      <a class="logout-btn" href="/logout" title="Cerrar sesión">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-      </a>
-    </div>
+    
   </div>
 
 </aside>
@@ -703,24 +695,73 @@
   <div class="journal-inner">
 
     <!-- HEADER -->
+        <!-- HEADER COMPARTIDO -->
     <header class="top-header">
       <div class="header-left">
-        <button class="sidebar-toggle" id="sidebar-toggle">
+        <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle sidebar">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
             <line x1="3" y1="6" x2="21" y2="6"/>
             <line x1="3" y1="12" x2="21" y2="12"/>
             <line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        <div class="header-title">
-          <span class="header-eyebrow">Trading Journal</span>
-          <h1>Mis <em>Trades</em></h1>
+      </div>
+      <div class="header-center">
+        <img src="/static/bananaTradeLogo.png" class="header-logo" alt="TradeBot AI">
+        <div class="header-brand-text">
+          <span class="header-brand-name">TradeBot <em>AI</em></span>
+          <span class="header-brand-sub">Crypto Intelligence</span>
         </div>
       </div>
       <div class="header-right">
         <div class="status-pill" id="status-pill">
           <span class="status-dot"></span>
-          <span id="plan-label">Cargando...</span>
+          <span>En línea</span>
+        </div>
+        <div class="user-chip" id="user-chip" style="display:none">
+          <button class="user-chip-btn" id="user-chip-btn" type="button">
+            <span class="user-chip-dot"></span>
+            <img class="user-chip-avatar" id="user-avatar" src="" alt="">
+            <span class="user-chip-name" id="user-name"></span>
+            <svg class="chip-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="dd-user-info">
+              <img class="dd-avatar" id="dd-avatar" src="" alt="">
+              <div class="dd-user-text">
+                <span class="dd-user-name" id="dd-user-name">Usuario</span>
+                <span class="dd-plan-badge" id="dd-plan-badge">Free</span>
+              </div>
+            </div>
+            <div class="dd-sep"></div>
+            <button class="dd-item" id="dd-theme-btn" type="button">
+              <span class="dd-icon">
+                <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+              </span>
+              <span id="dd-theme-label">Modo claro</span>
+            </button>
+            <button class="dd-item" id="dd-lang-btn" type="button">
+              <span class="dd-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </span>
+              <span id="dd-lang-label">English</span>
+            </button>
+            <div class="dd-sep"></div>
+            <a href="/journal" class="dd-item">
+              <span class="dd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span>
+              Trading Journal
+            </a>
+            <a href="/perfil" class="dd-item">
+              <span class="dd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+              Mi Perfil
+            </a>
+            <div class="dd-sep"></div>
+            <a href="/logout" class="dd-item dd-logout-item">
+              <span class="dd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+              Cerrar sesión
+            </a>
+          </div>
         </div>
       </div>
     </header>
@@ -1274,5 +1315,6 @@ function showToast(msg, type = "success") {
 }
 </script>
 
+<script src="/static/ui.js"></script>
 </body>
 </html>
