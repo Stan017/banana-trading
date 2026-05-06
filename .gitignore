@@ -1,21 +1,35 @@
+# ══════════════════════════════════════════════════════
 # TradeBot AI — .gitignore
+# ══════════════════════════════════════════════════════
 
-# CRITICO — nunca subir
+# ── CRÍTICO — nunca subir ──────────────────────────────
 .env
 .env.*
 *.env
+!.env.example
 
-# Base de conocimiento — privada y grande
-base_conocimiento/
-chroma_db/
-
-# Base de datos local
+# ── Base de datos ──────────────────────────────────────
 *.db
 *.sqlite
 *.sqlite3
 instance/
+liq_events.db
 
-# Python
+# ── Base de conocimiento (grande y privada) ────────────
+base_conocimiento/
+chroma_db/
+
+# ── Archivos de datos y caché en tiempo de ejecución ──
+*.csv
+*.pkl
+*.pickle
+edge_stats_cache.json
+hmm_model.pkl
+
+# ── Carpetas internas (no van al repo) ────────────────
+document/
+
+# ── Python ────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
@@ -29,31 +43,29 @@ venv/
 env/
 .venv/
 
-# Logs
+# ── Logs ──────────────────────────────────────────────
 *.log
 logs/
 tradebot_errors.log
 
-# Node
+# ── Node ──────────────────────────────────────────────
 node_modules/
 npm-debug.log*
 
-# OS
+# ── OS ────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# IDE
+# ── IDE ───────────────────────────────────────────────
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 
-# Temporales
+# ── Temporales ────────────────────────────────────────
 *.tmp
 *.bak
 temp/
 tmp/
-
-# Google credentials
-*.json

@@ -7,6 +7,68 @@
 let esperando = false;
 const MAX_CHARS = 1000;
 
+// ── TF Selector ──
+let selectedTf = localStorage.getItem('tradebot_tf') || '4h';
+
+function initTfSelector() {
+  const btns = document.querySelectorAll('.tf-btn');
+  btns.forEach(btn => {
+    if (btn.dataset.tf === selectedTf) btn.classList.add('active');
+    else btn.classList.remove('active');
+    btn.addEventListener('click', () => {
+      selectedTf = btn.dataset.tf;
+      localStorage.setItem('tradebot_tf', selectedTf);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+}
+
+// ── Model Selector ──
+let selectedModel = localStorage.getItem('tradebot_model') || 'haiku';
+
+function initModelSelector() {
+  const btns = document.querySelectorAll('.model-btn');
+  btns.forEach(btn => {
+    if (btn.dataset.model === selectedModel) btn.classList.add('active');
+    else btn.classList.remove('active');
+    btn.addEventListener('click', () => {
+      // Sonnet requiere Pro — el botón tiene data-pro="1" si es restringido
+      if (btn.dataset.pro === '1' && !window._userIsPro) {
+        showModelUpgradeHint(btn);
+        return;
+      }
+      selectedModel = btn.dataset.model;
+      localStorage.setItem('tradebot_model', selectedModel);
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+}
+
+function showModelUpgradeHint(btn) {
+  // Pequeño tooltip temporal
+  const existing = document.getElementById('model-upgrade-hint');
+  if (existing) existing.remove();
+  const hint = document.createElement('div');
+  hint.id = 'model-upgrade-hint';
+  hint.textContent = 'Sonnet requiere Plan Pro';
+  hint.style.cssText = `
+    position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+    background:var(--bg1);border:1px solid var(--border);
+    color:var(--text2);font-size:11px;font-weight:500;
+    padding:5px 10px;border-radius:6px;white-space:nowrap;
+    pointer-events:none;z-index:100;
+  `;
+  btn.style.position = 'relative';
+  btn.appendChild(hint);
+  setTimeout(() => hint.remove(), 2000);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  initTfSelector();
+  initModelSelector();
+});
+
 // ── Elementos ──
 const inputEl     = document.getElementById('input');
 const sendBtn     = document.getElementById('send-btn');
@@ -17,14 +79,7 @@ const statusPill  = document.getElementById('status-pill');
 const btnRefresh  = document.getElementById('btn-refresh');
 const btnClear    = document.getElementById('btn-clear');
 const sidebarEl   = document.getElementById('sidebar');
-const sidebarToggle = document.getElementById('sidebar-toggle');
-
-// ═══════════════════════════════════════
-// SIDEBAR TOGGLE
-// ═══════════════════════════════════════
-sidebarToggle.addEventListener('click', () => {
-  sidebarEl.classList.toggle('collapsed');
-});
+// sidebar-toggle eliminado — sidebar siempre visible
 
 // ═══════════════════════════════════════
 // INPUT — auto-resize + enable send btn
@@ -106,10 +161,16 @@ async function enviar() {
   const typingId = mostrarTyping();
 
   try {
+    // Incluir tab_token si existe (contexto de trade por tab — solo se usa una vez)
+    const body = { pregunta: texto, tf: selectedTf, model: selectedModel };
+    if (window._tabToken) {
+      body.tab_token    = window._tabToken;
+      window._tabToken  = null;  // consumir — el contexto ya fue enviado
+    }
     const res = await fetch('/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pregunta: texto })
+      body: JSON.stringify(body)
     });
 
     // Fix 1: quitar typing DESPUÉS de recibir respuesta
@@ -526,12 +587,56 @@ function actualizarSidebar(symbol) {
   if (rsiEl && d.rsi !== undefined && d.rsi !== null) {
     const rsi = parseFloat(d.rsi);
     let cls = 'neutral';
-    if (rsi >= 80 || rsi <= 20) cls = 'warn';   // extremo — ámbar
-    else if (rsi > 60)          cls = 'down';   // zona alta — rojo
-    else if (rsi < 40)          cls = 'up';     // zona baja — verde
-    else                        cls = 'amber';  // neutro 40-60 — amarillo
+    if (rsi >= 80 || rsi <= 20) cls = 'warn';
+    else if (rsi > 60)          cls = 'down';
+    else if (rsi < 40)          cls = 'up';
+    else                        cls = 'amber';
     rsiEl.textContent = rsi.toFixed(1);
     rsiEl.className   = 'ind-val ' + cls;
+  }
+
+  // Order Flow row
+  const ofRow = document.getElementById('indicators-row-of');
+  if (ofRow) ofRow.style.display = 'flex';
+
+  // CVD
+  const cvdEl = document.getElementById('cvd-val');
+  if (cvdEl) {
+    const bias = d.cvd_bias || 'neutral';
+    const div  = d.cvd_divergencia;
+    if (div) {
+      cvdEl.textContent = '⚡ DIV';
+      cvdEl.className   = 'ind-val warn';
+    } else if (bias === 'bullish') {
+      cvdEl.textContent = '▲ BUY';
+      cvdEl.className   = 'ind-val up';
+    } else if (bias === 'bearish') {
+      cvdEl.textContent = '▼ SELL';
+      cvdEl.className   = 'ind-val down';
+    } else {
+      cvdEl.textContent = '— NEUTRO';
+      cvdEl.className   = 'ind-val neutral';
+    }
+  }
+
+  // Whales
+  const whalesEl = document.getElementById('whales-val');
+  if (whalesEl) {
+    const count = d.whale_count || 0;
+    const wbias = d.whale_bias || 'neutral';
+    if (count === 0) {
+      whalesEl.textContent = '— 0';
+      whalesEl.className   = 'ind-val neutral';
+    } else if (wbias === 'buy') {
+      whalesEl.textContent = `▲ ${count}`;
+      whalesEl.className   = 'ind-val up';
+    } else if (wbias === 'sell') {
+      whalesEl.textContent = `▼ ${count}`;
+      whalesEl.className   = 'ind-val down';
+    } else {
+      whalesEl.textContent = `↔ ${count}`;
+      whalesEl.className   = 'ind-val amber';
+    }
   }
 }
 
@@ -582,30 +687,7 @@ cargarMacro();
 setInterval(cargarMacro, 300000); // cada 5 min (yfinance es lento)
 btnRefresh.addEventListener('click', cargarMacro);
 
-// ═══════════════════════════════════════
-// THEME — init desde localStorage
-// ═══════════════════════════════════════
-// Tema: manejado por ui.js;
-
-function toggleTheme() {
-  const cur  = document.documentElement.getAttribute('data-theme');
-  const next = cur === 'light' ? 'dark' : 'light';
-  document.documentElement.setAttribute('data-theme', next);
-  localStorage.setItem('theme', next);
-  // Actualizar label en dropdown
-  const label = document.getElementById('dd-theme-label');
-  if (label) label.textContent = next === 'light' ? 'Modo oscuro' : 'Modo claro';
-}
-
-const ddThemeBtn = document.getElementById('dd-theme-btn');
-if (ddThemeBtn) ddThemeBtn.addEventListener('click', toggleTheme);
-
-// Inicializar label del tema
-(function() {
-  const cur = localStorage.getItem('theme') || 'dark';
-  const label = document.getElementById('dd-theme-label');
-  if (label) label.textContent = cur === 'light' ? 'Modo oscuro' : 'Modo claro';
-})();
+// Tema y dropdown: manejados por ui.js
 
 // Dropdown: inicializado por ui.js (uiInitDropdown)
 
@@ -717,36 +799,247 @@ function applyLang(lang) {
   }
 }
 
-// Override setStatus to use translations
+// Override setStatus to use translations (statusPill puede estar oculto cuando el user está logueado)
 const _setStatusOrig = setStatus;
 function setStatus(estado) {
-  const dot  = statusPill.querySelector('.status-dot');
+  if (!statusPill || statusPill.style.display === 'none') return;
   const text = statusPill.querySelector('[data-i18n="online"]') || statusPill.querySelector('span:last-child');
   const t = TRANSLATIONS[currentLang] || TRANSLATIONS.es;
   if (estado === 'thinking') {
     statusPill.classList.add('thinking');
-    text.textContent = t.thinking;
+    if (text) text.textContent = t.thinking;
   } else {
     statusPill.classList.remove('thinking');
-    text.textContent = t.online;
+    if (text) text.textContent = t.online;
   }
 }
 
-// Lang toggle — ahora en el dropdown
-const ddLangBtn = document.getElementById('dd-lang-btn');
-if (ddLangBtn) {
-  ddLangBtn.addEventListener('click', () => {
-    const next = currentLang === 'es' ? 'en' : 'es';
-    applyLang(next);
-  });
-}
-
-// Actualizar label idioma en dropdown
-function updateLangLabel(lang) {
-  const label = document.getElementById('dd-lang-label');
-  if (label) label.textContent = lang === 'es' ? 'English' : 'Español';
-}
+// ui.js maneja el toggle y dispara 'langchange' — app.js solo aplica las traducciones del chat
+document.addEventListener('langchange', e => applyLang(e.detail));
 
 // Apply saved language on load
 applyLang(currentLang);
-updateLangLabel(currentLang);
+// ══════════════════════════════════════════════════════════════
+// SCANNER HTF — sidebar panel
+// ══════════════════════════════════════════════════════════════
+
+async function cargarScanner() {
+  const el = document.getElementById('scanner-content');
+  const btn = document.getElementById('scanner-refresh');
+  if (!el) return;
+
+  if (btn) btn.style.opacity = '0.4';
+
+  let d = null;
+  try {
+    const res = await fetch('/api/scanner');
+    d = await res.json();
+    if (!d.ok) throw new Error(d.error || 'Error');
+
+    const convClass = (d.conviction || 'baja').toLowerCase();
+    const biasClass = d.bias === 'ALCISTA' ? 'alcista' : d.bias === 'BAJISTA' ? 'bajista' : 'none';
+    const biasLabel = d.bias || 'Sin setup';
+
+    // Estado de alerta
+    let alertaBadge = '';
+    if (d.alerta_valida) {
+      alertaBadge = `<div class="scanner-alerta-badge activa">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>
+        ALERTA VÁLIDA
+      </div>`;
+    } else if (d.setup_ok || d.setup_potencial) {
+      alertaBadge = `<div class="scanner-alerta-badge filtrado">
+        <span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;display:inline-block"></span>
+        ${d.setup_ok ? '8/8' : '7/8'} FILTRADO — score bajo
+      </div>`;
+    } else {
+      alertaBadge = `<div class="scanner-alerta-badge sin-setup">Sin setup activo</div>`;
+    }
+
+    // Barras de scoring
+    const macPct = Math.round((d.score_macro / 35) * 100);
+    const edgPct = Math.round((d.score_edge  / 25) * 100);
+    const tecPct = Math.round((d.score_tecnico / 40) * 100);
+
+    // Confluencias
+    const confsHtml = (d.confluencias || []).map(c => `
+      <div class="scanner-conf-item">
+        <div class="scanner-conf-dot ${c.ok ? 'ok' : 'no'}"></div>
+        <span style="color:${c.ok ? 'var(--text)' : 'var(--text3)'}; font-weight:${c.ok ? '600' : '400'}">${c.nombre}</span>
+        <span style="margin-left:auto;color:var(--text3);font-size:9px">${c.bias || ''}</span>
+      </div>`).join('');
+
+    // Edge desglose
+    const e = d.edge_desglose || {};
+
+    const haySetup = d.setup_ok || d.setup_potencial || d.alerta_valida;
+
+    // Con setup: mostrar score completo. Sin setup: mostrar contexto de mercado.
+    const scoringHtml = haySetup ? `
+      <div class="scanner-score-row">
+        <div class="scanner-score-num ${convClass}">${d.score_total}</div>
+        <div>
+          <div class="scanner-conv-badge ${convClass}">${d.conviction}</div>
+          <div style="font-size:9px;color:var(--text3);margin-top:3px">/100 pts</div>
+        </div>
+      </div>
+      <div class="scanner-bars">
+        <div class="scanner-bar-row">
+          <span class="scanner-bar-label">Macro</span>
+          <div class="scanner-bar-track"><div class="scanner-bar-fill macro" style="width:${macPct}%"></div></div>
+          <span class="scanner-bar-pts">${d.score_macro}/35</span>
+        </div>
+        <div class="scanner-bar-row">
+          <span class="scanner-bar-label">Edge</span>
+          <div class="scanner-bar-track"><div class="scanner-bar-fill edge" style="width:${edgPct}%"></div></div>
+          <span class="scanner-bar-pts">${d.score_edge}/25</span>
+        </div>
+        <div class="scanner-bar-row">
+          <span class="scanner-bar-label">Técnico</span>
+          <div class="scanner-bar-track"><div class="scanner-bar-fill tec" style="width:${tecPct}%"></div></div>
+          <span class="scanner-bar-pts">${d.score_tecnico}/40</span>
+        </div>
+      </div>` : `
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
+        <div style="display:flex;gap:6px">
+          <div style="flex:1;background:var(--bg3);border-radius:8px;padding:8px 10px">
+            <div style="font-size:9px;color:var(--text3);margin-bottom:2px">RÉGIMEN</div>
+            <div style="font-size:11px;font-weight:600;color:var(--text)">${d.regimen || '—'}</div>
+          </div>
+          <div style="flex:1;background:var(--bg3);border-radius:8px;padding:8px 10px">
+            <div style="font-size:9px;color:var(--text3);margin-bottom:2px">SESIÓN</div>
+            <div style="font-size:11px;font-weight:600;color:var(--text)">${e.kill_zone || '—'}</div>
+          </div>
+        </div>
+        <div style="background:var(--bg3);border-radius:8px;padding:8px 10px">
+          <div style="font-size:9px;color:var(--text3);margin-bottom:2px">FEAR &amp; GREED</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text)">${e.fng || '—'}</div>
+        </div>
+      </div>`;
+
+    el.innerHTML = `
+      ${alertaBadge}
+
+      <div class="scanner-bias-row">
+        <div class="scanner-bias-dot ${biasClass}"></div>
+        <span style="color:var(--text)">${biasLabel}</span>
+        ${haySetup ? `<span style="color:var(--text3);font-weight:400;margin-left:4px">· ${d.regimen || '—'}</span>` : ''}
+      </div>
+
+      ${scoringHtml}
+
+      <div class="scanner-confs">${confsHtml}</div>
+
+      ${(() => {
+        const cvdBias = d.cvd_bias || 'neutral';
+        const cvdDiv  = d.cvd_divergencia;
+        let cvdTxt, cvdColor;
+        if (cvdDiv) { cvdTxt = '⚡ CVD DIV'; cvdColor = '#f59e0b'; }
+        else if (cvdBias === 'bullish') { cvdTxt = '▲ CVD BUY'; cvdColor = 'var(--green)'; }
+        else if (cvdBias === 'bearish') { cvdTxt = '▼ CVD SELL'; cvdColor = 'var(--red)'; }
+        else { cvdTxt = '— CVD neutro'; cvdColor = 'var(--text3)'; }
+        return `<div style="font-size:9px;font-weight:600;color:${cvdColor};margin-top:4px">${cvdTxt}</div>`;
+      })()}
+
+      ${!haySetup && e.fomc ? `<div style="font-size:9px;color:var(--text3);margin-top:2px">${e.fomc}</div>` : ''}
+      <div class="scanner-ts">${d.timestamp || ''}</div>
+    `;
+
+  } catch(err) {
+    if (el) el.innerHTML = `<div style="font-size:11px;color:var(--text3)">Error cargando scanner</div>`;
+    return;
+  } finally {
+    if (btn) btn.style.opacity = '1';
+  }
+
+  // Renderizar panel de estructura FUERA del try — no puede romper el scanner
+  try { renderEstructura(d); } catch(e) { console.warn('renderEstructura:', e); }
+}
+
+// ═══════════════════════════════════════
+// ESTRUCTURA DE PRECIO — OBs / FVGs / EQH-EQL
+// Recibe el mismo payload de /api/scanner
+// ═══════════════════════════════════════
+function renderEstructura(d) {
+  const el = document.getElementById('estructura-content');
+  if (!el || !d) return;
+
+  const precio = d.precio || 0;
+  const obs    = d.obs    || [];
+  const fvgs   = d.fvgs   || [];
+  const eqh    = (d.eqh_eql || {}).eqh || [];
+  const eql    = (d.eqh_eql || {}).eql || [];
+
+  // Construir array de niveles unificado y ordenado de mayor a menor precio
+  const levels = [];
+
+  for (const ob of obs) {
+    const mid = (ob.high + ob.low) / 2;
+    levels.push({ tipo: 'ob-' + ob.tipo, mid, low: ob.low, high: ob.high, dist: ob.distancia_pct });
+  }
+  for (const fvg of fvgs) {
+    const mid = (fvg.precio_sup + fvg.precio_inf) / 2;
+    levels.push({ tipo: 'fvg-' + fvg.tipo, mid, low: fvg.precio_inf, high: fvg.precio_sup, dist: fvg.distancia_pct });
+  }
+  for (const z of eqh) {
+    levels.push({ tipo: 'eqh', mid: z.precio, low: z.precio, high: z.precio, dist: z.distancia_pct, toques: z.toques });
+  }
+  for (const z of eql) {
+    levels.push({ tipo: 'eql', mid: z.precio, low: z.precio, high: z.precio, dist: z.distancia_pct, toques: z.toques });
+  }
+
+  // Insertar precio actual
+  levels.push({ tipo: 'precio', mid: precio, low: precio, high: precio, dist: 0 });
+
+  // Ordenar: mayor precio arriba
+  levels.sort((a, b) => b.mid - a.mid);
+
+  if (levels.length <= 1) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:4px 0">Sin niveles detectados</div>';
+    return;
+  }
+
+  const fmt = n => n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  const fmtRange = (l, h) => l === h ? '$' + fmt(l) : '$' + fmt(l) + '–' + fmt(h);
+
+  const rows = levels.map(lv => {
+    let cls, tag, label;
+    const distStr = lv.dist === 0 ? '' : (lv.dist > 0 ? '+' : '') + lv.dist.toFixed(1) + '%';
+
+    if (lv.tipo === 'precio') {
+      cls = 'lv-precio'; tag = 'PRECIO'; label = '$' + fmt(precio);
+    } else if (lv.tipo === 'ob-alcista') {
+      cls = 'lv-ob-alc'; tag = 'OB ↑'; label = fmtRange(lv.low, lv.high);
+    } else if (lv.tipo === 'ob-bajista') {
+      cls = 'lv-ob-baj'; tag = 'OB ↓'; label = fmtRange(lv.low, lv.high);
+    } else if (lv.tipo === 'fvg-alcista') {
+      cls = 'lv-fvg-alc'; tag = 'FVG ↑'; label = fmtRange(lv.low, lv.high);
+    } else if (lv.tipo === 'fvg-bajista') {
+      cls = 'lv-fvg-baj'; tag = 'FVG ↓'; label = fmtRange(lv.low, lv.high);
+    } else if (lv.tipo === 'eqh') {
+      cls = 'lv-eqh'; tag = `EQH ×${lv.toques}`; label = '$' + fmt(lv.mid);
+    } else {
+      cls = 'lv-eql'; tag = `EQL ×${lv.toques}`; label = '$' + fmt(lv.mid);
+    }
+
+    return `<div class="lv-row ${cls}">
+      <span class="lv-tag">${tag}</span>
+      <span class="lv-label">${label}</span>
+      <span class="lv-dist">${distStr}</span>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="lv-title">Mapa de niveles 4H</div>
+    <div class="lv-map">${rows}</div>
+    <div class="scanner-ts">${d.timestamp || ''}</div>
+  `;
+}
+
+// Cargar al iniciar y cada 2 minutos
+document.addEventListener('DOMContentLoaded', () => {
+  cargarScanner();
+  setInterval(cargarScanner, 120000);
+});
+
+// cargarLiquidity() definida en ui.js — disponible en todas las páginas

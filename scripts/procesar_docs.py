@@ -6,8 +6,9 @@ from chromadb.utils import embedding_functions
 # ============================================================
 # CONFIGURACIÓN
 # ============================================================
-CARPETA_DOCS = r"C:\Users\stanley\Desktop\copy\document\actualizaciones"
-CARPETA_DB = r"C:\Users\stanley\Desktop\copy\base_conocimiento"
+_BASE = os.path.dirname(__file__)
+CARPETA_DOCS = os.path.join(_BASE, "document", "actualizaciones")
+CARPETA_DB   = os.path.join(_BASE, "base_conocimiento")
 
 # ============================================================
 # CONEXIÓN A LA BASE DE CONOCIMIENTO

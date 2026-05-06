@@ -42,38 +42,38 @@
     z-index: 1;
   }
   .logo { width: 64px; height: 64px; margin: 0 auto 16px; filter: drop-shadow(0 0 16px rgba(245,197,24,0.35)); }
-  .title { font-size: 24px; font-weight: 700; color: #f1f5f9; margin-bottom: 4px; }
-  .title span { background: linear-gradient(135deg, #2563eb, #00d4aa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .sub { font-size: 13px; color: #64748b; margin-bottom: 28px; }
+  .title { font-size: 24px; font-weight: 700; color: #F5EFE6; margin-bottom: 4px; }
+  .title span { background: linear-gradient(135deg, #6D94C5, #CBDCEB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .sub { font-size: 13px; color: #7A8FA8; margin-bottom: 28px; }
 
   /* Tabs */
   .tabs { display: flex; background: rgba(255,255,255,0.04); border-radius: 10px; padding: 3px; margin-bottom: 24px; }
   .tab { flex: 1; padding: 8px; font-family: "Outfit", sans-serif; font-size: 13px; font-weight: 600;
-          background: none; border: none; color: #64748b; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
-  .tab.active { background: #1e293b; color: #f1f5f9; }
+          background: none; border: none; color: #7A8FA8; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+  .tab.active { background: #1E2538; color: #F5EFE6; }
 
   /* Formulario */
   .form-panel { display: none; }
   .form-panel.active { display: block; }
   .field { margin-bottom: 14px; text-align: left; }
-  .field label { display: block; font-size: 12px; color: #64748b; margin-bottom: 6px; font-weight: 500; }
+  .field label { display: block; font-size: 12px; color: #7A8FA8; margin-bottom: 6px; font-weight: 500; }
   .field input {
     width: 100%; padding: 11px 14px;
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 10px;
-    color: #f1f5f9;
+    color: #F5EFE6;
     font-family: "Outfit", sans-serif;
     font-size: 14px;
     outline: none;
     transition: border-color 0.2s;
   }
-  .field input:focus { border-color: #2563eb; }
-  .field input::placeholder { color: #334155; }
+  .field input:focus { border-color: #6D94C5; }
+  .field input::placeholder { color: #4A5C70; }
 
   .btn-primary {
     width: 100%; padding: 12px;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
+    background: linear-gradient(135deg, #6D94C5, #5A7EAE);
     color: white; border: none; border-radius: 10px;
     font-family: "Outfit", sans-serif; font-size: 14px; font-weight: 600;
     cursor: pointer; transition: all 0.2s; margin-top: 4px;
@@ -81,7 +81,7 @@
   .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
   .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
-  .divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: #334155; font-size: 12px; }
+  .divider { display: flex; align-items: center; gap: 12px; margin: 18px 0; color: #4A5C70; font-size: 12px; }
   .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.06); }
 
   .google-btn {
@@ -93,24 +93,24 @@
     cursor: pointer; text-decoration: none; transition: all 0.2s;
     box-shadow: 0 2px 8px rgba(0,0,0,0.2);
   }
-  .google-btn:hover { background: #f1f5f9; transform: translateY(-1px); }
+  .google-btn:hover { background: #F5EFE6; transform: translateY(-1px); }
   .google-icon { width: 18px; height: 18px; flex-shrink: 0; }
 
   .error-msg { color: #ef4444; font-size: 12px; margin-top: 10px; min-height: 18px; }
-  .disclaimer { margin-top: 20px; font-size: 11px; color: var(--ltext3, #334155); line-height: 1.6; }
+  .disclaimer { margin-top: 20px; font-size: 11px; color: var(--ltext3, #4A5C70); line-height: 1.6; }
 
   /* ---- CSS Variables: dark (default) / light ---- */
   :root {
-    --lbg:#0a0a0f; --lcard:#13131a; --lborder:rgba(255,255,255,0.07);
-    --ltext:#f1f5f9; --ltext2:#64748b; --ltext3:#334155;
+    --lbg:#0A0C0F; --lcard:#111520; --lborder:rgba(255,255,255,0.07);
+    --ltext:#F5EFE6; --ltext2:#CBDCEB; --ltext3:#7A8FA8;
     --linput:rgba(255,255,255,0.05); --linputb:rgba(255,255,255,0.08);
-    --ltabs:rgba(255,255,255,0.04); --ltabact:#1e293b;
+    --ltabs:rgba(255,255,255,0.04); --ltabact:#1E2538;
   }
   [data-theme="light"] {
-    --lbg:#f0f4fb; --lcard:#ffffff; --lborder:rgba(0,0,0,0.08);
-    --ltext:#0f172a; --ltext2:#475569; --ltext3:#94a3b8;
-    --linput:#f8fafc; --linputb:rgba(0,0,0,0.10);
-    --ltabs:rgba(0,0,0,0.04); --ltabact:#e2e8f0;
+    --lbg:#F0EBE3; --lcard:#EDE6DC; --lborder:rgba(0,0,0,0.08);
+    --ltext:#1A1612; --ltext2:#4A3F35; --ltext3:#8A7A6A;
+    --linput:#F8F4EE; --linputb:rgba(0,0,0,0.10);
+    --ltabs:rgba(0,0,0,0.04); --ltabact:#D8CEBC;
   }
   body { background:var(--lbg); color:var(--ltext); transition:background .25s,color .25s; }
   .card { background:var(--lcard); border:1px solid var(--lborder); }
@@ -233,6 +233,10 @@ async function doLogin() {
     const data = await r.json();
     if (data.ok) {
       window.location.href = data.redirect;
+    } else if (data.require_2fa) {
+      btn.disabled = false;
+      btn.textContent = "Entrar";
+      mostrar2faPanel();
     } else {
       err.textContent = data.error || "Error al iniciar sesión";
       btn.disabled = false;
@@ -242,6 +246,107 @@ async function doLogin() {
     err.textContent = "Error de conexión";
     btn.disabled = false;
     btn.textContent = "Entrar";
+  }
+}
+
+
+function mostrar2faPanel() {
+  document.getElementById('panel-login').classList.remove('active');
+
+  if (!document.getElementById('panel-2fa')) {
+    const panel = document.createElement('div');
+    panel.id = 'panel-2fa';
+    panel.className = 'form-panel active';
+    panel.innerHTML = `
+      <div style="text-align:center;margin-bottom:20px">
+        <div style="width:48px;height:48px;border-radius:14px;background:rgba(37,99,235,0.12);
+                    border:1px solid rgba(37,99,235,0.25);display:inline-flex;
+                    align-items:center;justify-content:center;margin-bottom:12px">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div style="font-size:16px;font-weight:700;color:var(--text,#e5e7eb);margin-bottom:4px">
+          Verificacion en dos pasos
+        </div>
+        <div style="font-size:12px;color:var(--text3,#6b7280);line-height:1.5">
+          Abre Google Authenticator o Authy<br>e ingresa el codigo de 6 digitos
+        </div>
+      </div>
+      <div class="field" style="display:flex;flex-direction:column;align-items:center">
+        <input id="otp-code" type="text" inputmode="numeric" maxlength="6"
+               placeholder="000000" autocomplete="one-time-code"
+               style="width:160px;text-align:center;font-size:26px;font-weight:700;
+                      letter-spacing:10px;padding:12px 8px;
+                      background:var(--input-bg,#1a1a2e);
+                      border:1px solid var(--border,#2d2d3d);
+                      border-radius:10px;color:var(--text,#e5e7eb);
+                      outline:none;transition:border-color 0.15s;font-family:monospace">
+      </div>
+      <div class="error-msg" id="otp-error" style="text-align:center"></div>
+      <button class="btn-primary" id="btn-verificar" onclick="doVerify2fa()">Verificar</button>
+      <div style="text-align:center;margin-top:14px">
+        <button onclick="volver2faLogin()"
+                style="background:none;border:none;color:var(--text3,#6b7280);
+                       font-size:12px;cursor:pointer;text-decoration:underline">
+          Volver al login
+        </button>
+      </div>
+    `;
+    document.getElementById('panel-login').insertAdjacentElement('afterend', panel);
+  } else {
+    document.getElementById('panel-2fa').classList.add('active');
+    document.getElementById('otp-error').textContent = '';
+    document.getElementById('otp-code').value = '';
+  }
+
+  setTimeout(() => {
+    const input = document.getElementById('otp-code');
+    if (input) {
+      input.focus();
+      input.addEventListener('focus', () => input.style.borderColor = '#3b82f6');
+      input.addEventListener('blur',  () => input.style.borderColor = 'var(--border,#2d2d3d)');
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') doVerify2fa(); });
+    }
+  }, 50);
+}
+
+function volver2faLogin() {
+  const p2fa = document.getElementById('panel-2fa');
+  if (p2fa) p2fa.classList.remove('active');
+  document.getElementById('panel-login').classList.add('active');
+}
+
+async function doVerify2fa() {
+  const code = (document.getElementById('otp-code').value || '').replace(/\s/g, '');
+  const err  = document.getElementById('otp-error');
+  const btn  = document.getElementById('btn-verificar');
+  err.textContent = '';
+
+  if (!code || code.length !== 6 || !/^\d+$/.test(code)) {
+    err.textContent = 'Ingresa los 6 digitos del autenticador.'; return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Verificando...';
+
+  try {
+    const r = await fetch('/login/verify-2fa', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ code })
+    });
+    const data = await r.json();
+    if (data.ok) {
+      window.location.href = data.redirect;
+    } else {
+      err.textContent = data.error || 'Codigo incorrecto.';
+      document.getElementById('otp-code').value = '';
+      document.getElementById('otp-code').focus();
+      btn.disabled = false; btn.textContent = 'Verificar';
+    }
+  } catch(e) {
+    err.textContent = 'Error de conexion.';
+    btn.disabled = false; btn.textContent = 'Verificar';
   }
 }
 

@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/static/bananaTradeLogo2.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Market Depth — Banana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<!-- TradingView Lightweight Charts v3 (API estable) -->
+<script src="{{ url_for('static', filename='lightweight-charts.standalone.production.js') }}"></script>
+<style>
+/* ══════════════════════════════════════
+   MARKET DEPTH — estilos específicos
+══════════════════════════════════════ */
+
+.depth-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg0);
+}
+
+/* ── Toolbar ── */
+.depth-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px 10px;
+  border-bottom: 1px solid var(--bg3);
+  flex-shrink: 0;
+}
+
+.depth-sym-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.depth-sym-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+}
+.depth-price {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: -0.5px;
+}
+.depth-price-change {
+  font-size: 12px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.depth-price-change.up   { color: #26a69a; }
+.depth-price-change.down { color: #ef5350; }
+
+.depth-tf-group {
+  display: flex;
+  gap: 4px;
+  margin-left: 8px;
+}
+.tf-btn {
+  background: var(--bg2);
+  border: 1px solid var(--bg3);
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 4px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  letter-spacing: 0.3px;
+}
+.tf-btn:hover  { color: var(--text); border-color: var(--bg4); }
+.tf-btn.active {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+}
+
+.depth-refresh-btn {
+  margin-left: auto;
+  background: var(--bg2);
+  border: 1px solid var(--bg3);
+  color: var(--text3);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
+}
+.depth-refresh-btn:hover { color: var(--text); border-color: var(--bg4); }
+.depth-refresh-btn svg { transition: transform 0.4s; }
+.depth-refresh-btn.spinning svg { transform: rotate(360deg); }
+
+/* ── Info bar (VPOC / VAH / VAL / Imbalance) ── */
+.depth-infobar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 6px 24px;
+  background: var(--bg1);
+  border-bottom: 1px solid var(--bg2);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.depth-info-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.depth-info-label {
+  color: var(--text3);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.depth-info-val {
+  color: var(--text);
+  font-weight: 600;
+}
+.depth-info-val.vpoc   { color: #f59e0b; }
+.depth-info-val.vah    { color: #a78bfa; }
+.depth-info-val.val    { color: #a78bfa; }
+.depth-info-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.depth-info-dot.vpoc  { background: #f59e0b; }
+.depth-info-dot.vah   { background: #a78bfa; }
+.depth-info-dot.val   { background: #7c3aed; }
+.depth-info-dot.bid   { background: #26a69a; }
+.depth-info-dot.ask   { background: #ef5350; }
+
+/* ── Chart area ── */
+.depth-chart-area {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  min-height: 0;
+}
+#chart-container {
+  position: relative;   /* necesario para canvas overlay absolute */
+  width: 100%;
+  height: 100%;
+  background: #0a0a0a;  /* fondo oscuro en el div — LW Charts va transparente */
+}
+
+/* ── Loading overlay ── */
+.depth-loading {
+  position: absolute;
+  inset: 0;
+  background: rgba(10,10,10,0.75);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  z-index: 100;
+  backdrop-filter: blur(2px);
+  transition: opacity 0.25s;
+}
+.depth-loading.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.depth-spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--bg3);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.depth-loading span {
+  font-size: 12px;
+  color: var(--text3);
+}
+
+/* ── Error banner ── */
+.depth-error {
+  display: none;
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #7f1d1d;
+  color: #fca5a5;
+  border: 1px solid #991b1b;
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 12px;
+  z-index: 200;
+}
+.depth-error.visible { display: block; }
+/* Nav group dropdown */
+.nav-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.nav-group-trigger {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.nav-chevron {
+  opacity: 0.5;
+  transition: transform 0.2s, opacity 0.2s;
+  margin-left: 1px;
+}
+.nav-group:hover .nav-chevron {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+.nav-submenu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  background: var(--bg1, #111);
+  border: 1px solid var(--bg3, #2a2a2a);
+  border-radius: 8px;
+  padding: 10px 4px 4px;
+  min-width: 150px;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.nav-submenu::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
+}
+.nav-group:hover .nav-submenu {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateX(-50%) translateY(0);
+}
+.nav-sub-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text3, #6b7280);
+  text-decoration: none;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.nav-sub-item:hover {
+  background: var(--bg2, #1a1a1a);
+  color: var(--text, #e5e7eb);
+}
+.nav-sub-item.active {
+  color: var(--blue, #3b82f6);
+  background: var(--bg2, #1a1a1a);
+}
+
+/* ── Gear button ── */
+.depth-gear-btn {
+  background: var(--bg2);
+  border: 1px solid var(--bg3);
+  color: var(--text3);
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+  margin-left: 8px;
+}
+.depth-gear-btn:hover  { color: var(--text); border-color: var(--bg4); }
+.depth-gear-btn.active { color: var(--blue); border-color: var(--blue); background: rgba(59,130,246,.1); }
+
+/* ── Control panel ── */
+.depth-ctrl-panel {
+  display: none;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 28px;
+  padding: 14px 24px;
+  background: #0d0d0d;
+  border-bottom: 1px solid var(--bg3);
+  flex-shrink: 0;
+  align-items: flex-start;
+}
+.depth-ctrl-panel.open { display: flex; }
+
+.ctrl-section {
+  display: flex; flex-direction: column; gap: 8px;
+  padding-right: 28px;
+  border-right: 1px solid var(--bg3);
+}
+.ctrl-section:last-child { border-right: none; padding-right: 0; }
+
+.ctrl-section-title {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.2px;
+  color: var(--text3); text-transform: uppercase; margin-bottom: 2px;
+}
+
+.ctrl-row {
+  display: flex; align-items: center; gap: 10px;
+}
+
+.ctrl-label {
+  font-size: 11px; color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  min-width: 72px;
+}
+.ctrl-val {
+  font-size: 11px; color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  min-width: 38px; text-align: right;
+}
+
+/* toggle switch */
+.ctrl-toggle-wrap { display: flex; align-items: center; cursor: pointer; }
+.ctrl-toggle-wrap input { display: none; }
+.ctrl-toggle-track {
+  width: 34px; height: 18px;
+  background: var(--bg3);
+  border-radius: 9px;
+  position: relative;
+  transition: background 0.2s;
+}
+.ctrl-toggle-track::after {
+  content: '';
+  position: absolute; top: 3px; left: 3px;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--text3);
+  transition: all 0.2s;
+}
+.ctrl-toggle-wrap input:checked ~ .ctrl-toggle-track { background: var(--blue); }
+.ctrl-toggle-wrap input:checked ~ .ctrl-toggle-track::after {
+  left: 19px; background: #fff;
+}
+.ctrl-toggle-label {
+  font-size: 11px; color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+  margin-left: 8px;
+}
+kbd {
+  background: var(--bg3); border: 1px solid var(--bg4);
+  border-radius: 3px; padding: 1px 5px;
+  font-size: 9px; color: var(--text3);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* range slider */
+input[type="range"].ctrl-range {
+  -webkit-appearance: none; height: 3px;
+  background: var(--bg3); border-radius: 2px;
+  outline: none; width: 110px; cursor: pointer;
+}
+input[type="range"].ctrl-range::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 13px; height: 13px;
+  border-radius: 50%; background: var(--blue); cursor: pointer;
+  border: 2px solid #0d0d0d;
+}
+
+/* btn group */
+.ctrl-btn-group { display: flex; gap: 3px; }
+.ctrl-mode-btn {
+  background: var(--bg2); border: 1px solid var(--bg3);
+  color: var(--text3);
+  font-size: 10px; font-weight: 600;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 3px 9px; border-radius: 4px;
+  cursor: pointer; transition: all 0.15s;
+}
+.ctrl-mode-btn:hover  { color: var(--text); border-color: var(--bg4); }
+.ctrl-mode-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+/* checkboxes custom */
+.ctrl-checks { flex-wrap: wrap; gap: 10px; }
+.ctrl-check-item {
+  display: flex; align-items: center; gap: 0;
+  cursor: pointer;
+}
+.ctrl-check-item input { display: none; }
+.ctrl-check-box {
+  width: 14px; height: 14px;
+  border: 1px solid var(--bg4); border-radius: 3px;
+  background: var(--bg2);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s; margin-right: 5px; flex-shrink: 0;
+}
+.ctrl-check-box svg { display: none; }
+.ctrl-check-item input:checked ~ .ctrl-check-box {
+  background: var(--blue); border-color: var(--blue);
+}
+.ctrl-check-item input:checked ~ .ctrl-check-box svg { display: block; }
+.ctrl-check-text {
+  font-size: 11px; font-family: 'JetBrains Mono', monospace;
+  color: var(--text3); transition: color 0.15s;
+}
+.ctrl-check-item input:checked ~ .ctrl-check-text { color: var(--text); }
+</style>
+</head>
+<body>
+  <main class="depth-main">
+
+    <!-- HEADER COMPARTIDO -->
+    <header class="top-header" style="padding-left:24px;padding-right:24px;">
+      <div class="header-left"></div>
+      <div class="header-center">
+        <nav class="header-nav">
+          <a href="/" class="header-nav-link">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Home
+          </a>
+          <a href="/journal" class="header-nav-link">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Journal
+          </a>
+          <a href="/edge" class="header-nav-link">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Edge Analytics
+          </a>
+          <div class="nav-group">
+            <a href="/liquidity" class="header-nav-link nav-group-trigger active">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              Liquidity
+              <svg class="nav-chevron" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </a>
+            <div class="nav-submenu">
+              <a href="/liquidity" class="nav-sub-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Liquidity Map
+              </a>
+              <a href="/depth" class="nav-sub-item active">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                Market Depth
+              </a>
+            </div>
+          </div>
+        </nav>
+      </div>
+      <div class="header-right">
+        <div class="status-pill" id="status-pill">
+          <span class="status-dot"></span>
+          <span>En línea</span>
+        </div>
+        <div class="user-chip" id="user-chip" style="display:none">
+          <button class="user-chip-btn" id="user-chip-btn" type="button">
+            <span class="user-chip-dot"></span>
+            <img class="user-chip-avatar" id="user-avatar" src="" alt="">
+            <span class="user-chip-name" id="user-name"></span>
+            <svg class="chip-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="dd-user-info">
+              <img class="dd-avatar" id="dd-avatar" src="" alt="">
+              <div class="dd-user-text">
+                <span class="dd-user-name" id="dd-user-name">Usuario</span>
+                <span class="dd-plan-badge" id="dd-plan-badge">Free</span>
+              </div>
+            </div>
+            <div class="dd-sep"></div>
+            <button class="dd-item" id="dd-theme-btn" type="button">
+              <span class="dd-icon">
+                <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+              </span>
+              <span id="dd-theme-label">Modo claro</span>
+            </button>
+            <div class="dd-sep"></div>
+            <a href="/perfil" class="dd-item">
+              <span class="dd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+              Mi Perfil
+            </a>
+            <div class="dd-sep"></div>
+            <a href="/logout" class="dd-item dd-logout-item">
+              <span class="dd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+              Ceritar sesión
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+      <!-- TOOLBAR -->
+      <div class="depth-toolbar">
+        <div class="depth-sym-wrap">
+          <span class="depth-sym-name">BTC/USDT</span>
+          <span class="depth-price" id="depth-price">—</span>
+          <span class="depth-price-change" id="depth-change"></span>
+        </div>
+        <div class="depth-tf-group">
+          <button class="tf-btn" data-tf="15m">15M</button>
+          <button class="tf-btn" data-tf="1h">1H</button>
+          <button class="tf-btn active" data-tf="4h">4H</button>
+          <button class="tf-btn" data-tf="1d">1D</button>
+        </div>
+        <button class="depth-refresh-btn" id="refresh-btn" onclick="loadData()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Refresh
+        </button>
+        <button class="depth-gear-btn" id="gear-btn" title="Configuración del panel">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
+      </div>
+
+      <!-- INFO BAR -->
+      <div class="depth-infobar" id="depth-infobar">
+        <div class="depth-info-item">
+          <div class="depth-info-dot vpoc"></div>
+          <span class="depth-info-label">VPOC</span>
+          <span class="depth-info-val vpoc" id="info-vpoc">—</span>
+        </div>
+        <div class="depth-info-item">
+          <div class="depth-info-dot vah"></div>
+          <span class="depth-info-label">VAH</span>
+          <span class="depth-info-val vah" id="info-vah">—</span>
+        </div>
+        <div class="depth-info-item">
+          <div class="depth-info-dot val"></div>
+          <span class="depth-info-label">VAL</span>
+          <span class="depth-info-val val" id="info-val">—</span>
+        </div>
+        <div class="depth-info-item" id="info-imbalance-wrap" style="display:none">
+          <div class="depth-info-dot" id="info-imbalance-dot"></div>
+          <span class="depth-info-label">L2</span>
+          <span class="depth-info-val" id="info-imbalance">—</span>
+        </div>
+        <div class="depth-info-item" id="info-bid-wall-wrap" style="display:none">
+          <div class="depth-info-dot bid"></div>
+          <span class="depth-info-label">Bid Wall</span>
+          <span class="depth-info-val" id="info-bid-wall">—</span>
+        </div>
+        <div class="depth-info-item" id="info-ask-wall-wrap" style="display:none">
+          <div class="depth-info-dot ask"></div>
+          <span class="depth-info-label">Ask Wall</span>
+          <span class="depth-info-val" id="info-ask-wall">—</span>
+        </div>
+      </div>
+
+      <!-- CONTROL PANEL (colapsable con gear btn) -->
+      <div class="depth-ctrl-panel" id="ctrl-panel">
+
+        <!-- SECCIÓN: HEATMAP -->
+        <div class="ctrl-section">
+          <span class="ctrl-section-title">Heatmap</span>
+          <div class="ctrl-row">
+            <label class="ctrl-toggle-wrap">
+              <input type="checkbox" id="ctrl-heatmap" checked>
+              <span class="ctrl-toggle-track"></span>
+            </label>
+            <span class="ctrl-toggle-label">On &nbsp;<kbd>H</kbd></span>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">Threshold</span>
+            <input type="range" class="ctrl-range" id="ctrl-threshold" min="0" max="50" value="1" step="1">
+            <span class="ctrl-val" id="ctrl-threshold-val">1%</span>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">Opacity</span>
+            <input type="range" class="ctrl-range" id="ctrl-opacity" min="10" max="100" value="100" step="5">
+            <span class="ctrl-val" id="ctrl-opacity-val">100%</span>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">Color</span>
+            <div class="ctrl-btn-group" id="ctrl-color">
+              <button class="ctrl-mode-btn active" data-val="heat">Heat</button>
+              <button class="ctrl-mode-btn" data-val="split">Split</button>
+              <button class="ctrl-mode-btn" data-val="mono">Mono</button>
+            </div>
+          </div>
+          <div class="ctrl-row">
+            <span class="ctrl-label">Side</span>
+            <div class="ctrl-btn-group" id="ctrl-side">
+              <button class="ctrl-mode-btn active" data-val="both">Both</button>
+              <button class="ctrl-mode-btn" data-val="long">Longs</button>
+              <button class="ctrl-mode-btn" data-val="short">Shorts</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN: LEVERAGE FILTER — se rellena dinámicamente -->
+        <div class="ctrl-section">
+          <span class="ctrl-section-title">Leverage Filter</span>
+          <div class="ctrl-row ctrl-checks" id="ctrl-leverage">
+            <!-- generado por updateLevCheckboxes() al recibir datos del backend -->
+          </div>
+        </div>
+
+        <!-- SECCIÓN: PRICE LINES -->
+        <div class="ctrl-section">
+          <span class="ctrl-section-title">Price Lines</span>
+          <div class="ctrl-row ctrl-checks" id="ctrl-lines">
+            <label class="ctrl-check-item"><input type="checkbox" data-line="vpoc" checked><span class="ctrl-check-box"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span><span class="ctrl-check-text">VPOC</span></label>
+            <label class="ctrl-check-item"><input type="checkbox" data-line="vahval" checked><span class="ctrl-check-box"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span><span class="ctrl-check-text">VAH/VAL</span></label>
+            <label class="ctrl-check-item"><input type="checkbox" data-line="walls" checked><span class="ctrl-check-box"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span><span class="ctrl-check-text">Bid/Ask Walls</span></label>
+            <label class="ctrl-check-item"><input type="checkbox" data-line="now" checked><span class="ctrl-check-box"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></span><span class="ctrl-check-text">NOW</span></label>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- CHART AREA -->
+      <div class="depth-chart-area">
+        <div id="chart-container"></div>
+        <div class="depth-loading" id="depth-loading">
+          <div class="depth-spinner"></div>
+          <span>Cargando datos de mercado...</span>
+        </div>
+        <div class="depth-error" id="depth-error"></div>
+      </div>
+
+  </main><!-- /depth-main -->
+
+<script>
+/* ══════════════════════════════════════════════════════════════════
+   MARKET DEPTH — JavaScript
+   Fase 1: TradingView Lightweight Charts + price lines de liquidez
+══════════════════════════════════════════════════════════════════ */
+
+let chart        = null;
+let candleSeries = null;
+let volSeries    = null;
+let priceLines   = [];
+let overlayCanvas = null;
+let overlayCtx    = null;
+let lastData      = null;
+let currentTf    = '4h';
+let autoRefreshId = null;
+let _firstLoad    = true;   // fitContent solo en la primera carga
+const AUTO_REFRESH_MS = 60_000;
+
+// ── Estado del panel de controles ────────────────────────────────
+const controls = {
+  heatmap:   true,
+  threshold: 0.01,        // 0.0 = cobertura total | alto = solo zonas calientes
+  opacity:   1.0,         // 0.0 – 1.0
+  colorMode: 'heat',      // 'heat' | 'split' | 'mono'
+  side:      'both',      // 'both' | 'long' | 'short'
+  leverage:  {},          // se rellena dinámicamente al recibir lev_groups del backend
+  lines:     { vpoc: true, vahval: true, liq: false, walls: true, now: true },
+};
+
+// ── Colores base por grupo de leverage ───────────────────────────
+// Cada grupo tiene una rampa [t, r, g, b, a] de frío→caliente.
+// El heat de cada celda (0-1) determina qué tan lejos llega en la rampa.
+// A mayor cantidad de liquidez, el color sube hacia naranja-rojo
+// independientemente del leverage base.
+const LEV_COLOR_RAMPS = {
+  // ── 15m / 1h — arranca visible desde t=0.03 (no más gaps negros) ──
+  '10x':    [[0.00,  20, 100, 45, 0.00],
+             [0.03,  25, 120, 50, 0.14],   // verde muy oscuro — zona fría visible
+             [0.15,  35, 155, 58, 0.28],   // verde tenue
+             [0.35,  55, 195, 75, 0.46],   // verde medio
+             [0.58, 210, 185, 20, 0.65],   // amarillo-verde
+             [0.80, 235,  95, 15, 0.80],   // naranja
+             [1.00, 220,  45, 10, 0.92]],  // rojo-naranja intenso
+  '20-25x': [[0.00, 130, 130,  8, 0.00],
+             [0.03, 150, 150, 12, 0.13],
+             [0.15, 190, 190, 18, 0.28],
+             [0.35, 230, 215, 22, 0.48],   // amarillo pálido
+             [0.58, 250, 175, 15, 0.65],   // naranja
+             [0.80, 235,  90, 12, 0.80],   // naranja-rojo
+             [1.00, 215,  40, 10, 0.92]],  // rojo
+  '50x':    [[0.00, 150,  70,  5, 0.00],
+             [0.03, 170,  90, 10, 0.13],
+             [0.15, 210, 115, 15, 0.28],
+             [0.35, 245, 145, 20, 0.50],   // naranja suave
+             [0.58, 240,  90, 18, 0.68],   // naranja-rojo
+             [0.80, 215,  40, 15, 0.82],   // rojo medio
+             [1.00, 190,  15, 10, 0.93]],  // rojo oscuro
+  '100x':   [[0.00, 110,  18, 12, 0.00],
+             [0.03, 140,  38, 18, 0.14],
+             [0.15, 175,  50, 22, 0.30],
+             [0.35, 225,  72, 28, 0.55],
+             [0.58, 215,  35, 18, 0.72],
+             [0.80, 195,  18, 12, 0.85],
+             [1.00, 170,   8,  8, 0.94]],
+  // ── 4h / 1d (macro) ──────────────────────────────────────────
+  '3x':     [[0.00,  10,  75,150, 0.00],
+             [0.03,  15, 100,180, 0.13],
+             [0.15,  22, 135,195, 0.27],
+             [0.35,  28, 168,155, 0.44],
+             [0.58, 110, 182, 78, 0.62],
+             [0.80, 205, 155, 22, 0.78],
+             [1.00, 235,  90, 15, 0.90]],
+  '5x':     [[0.00,  12,  90, 45, 0.00],
+             [0.03,  20, 115, 55, 0.13],
+             [0.15,  38, 155, 65, 0.27],
+             [0.35,  55, 188, 72, 0.45],
+             [0.58, 195, 192, 22, 0.63],
+             [0.80, 228,  98, 15, 0.80],
+             [1.00, 215,  48, 10, 0.92]],
+  '25x':    [[0.00, 160,  50,  10, 0.00],
+             [0.03, 185,  70,  15, 0.13],
+             [0.15, 215,  95,  20, 0.28],
+             [0.35, 240, 130,  20, 0.50],
+             [0.58, 235,  95,  15, 0.68],
+             [0.80, 210,  40,  12, 0.82],
+             [1.00, 180,  15,  10, 0.93]],
+};
+// Fallback para keys no definidos
+function _getLevRamp(key) {
+  return LEV_COLOR_RAMPS[key] || LEV_COLOR_RAMPS['10x'];
+}
+
+function _lerpRamp(stops, t) {
+  if (t <= 0)  return `rgba(${stops[0][1]},${stops[0][2]},${stops[0][3]},0)`;
+  if (t >= 1)  { const s = stops[stops.length-1]; return `rgba(${s[1]},${s[2]},${s[3]},${s[4]})`; }
+  let i = 0;
+  while (i < stops.length - 2 && stops[i+1][0] <= t) i++;
+  const [t0,r0,g0,b0,a0] = stops[i];
+  const [t1,r1,g1,b1,a1] = stops[i+1];
+  const f = (t - t0) / (t1 - t0);
+  return `rgba(${Math.round(r0+f*(r1-r0))},${Math.round(g0+f*(g1-g0))},${Math.round(b0+f*(b1-b0))},${(a0+f*(a1-a0)).toFixed(3)})`;
+}
+
+// ── Canvas overlay (heatmap de liquidaciones) ─────────────────────
+function initOverlay(container) {
+  overlayCanvas = document.createElement('canvas');
+  overlayCanvas.style.cssText =
+    'position:absolute;top:0;left:0;pointer-events:none;z-index:5;';
+  // Insertar DESPUÉS de todos los hijos de LW Charts → queda encima
+  container.appendChild(overlayCanvas);
+  sizeOverlay(container.clientWidth, container.clientHeight);
+}
+
+function sizeOverlay(w, h) {
+  if (!overlayCanvas) return;
+  const dpr = window.devicePixelRatio || 1;
+  overlayCanvas.width  = w * dpr;
+  overlayCanvas.height = h * dpr;
+  overlayCanvas.style.width  = w + 'px';
+  overlayCanvas.style.height = h + 'px';
+  overlayCtx = overlayCanvas.getContext('2d');
+  overlayCtx.scale(dpr, dpr);   // coordenadas CSS en vez de físicas
+}
+
+// ── Interpolador de color base (compartido) ───────────────────────
+function _lerpColor(stops, t) {
+  if (t <= 0) return `rgba(${stops[0][1]},${stops[0][2]},${stops[0][3]},0)`;
+  if (t >= 1) { const s = stops[stops.length-1]; return `rgba(${s[1]},${s[2]},${s[3]},${s[4]})`; }
+  let i = 0;
+  while (i < stops.length - 2 && stops[i+1][0] <= t) i++;
+  const [t0,r0,g0,b0,a0] = stops[i];
+  const [t1,r1,g1,b1,a1] = stops[i+1];
+  const f = (t - t0) / (t1 - t0);
+  return `rgba(${Math.round(r0+f*(r1-r0))},${Math.round(g0+f*(g1-g0))},${Math.round(b0+f*(b1-b0))},${(a0+f*(a1-a0)).toFixed(3)})`;
+}
+
+// Escala para leverage zones estáticas (agresiva, arranca en verde opaco)
+function heatColor(t) {
+  return _lerpColor([
+    [0.00,  38, 166, 154, 0.00],
+    [0.10,  56, 142,  60, 0.20],
+    [0.28,  76, 175,  80, 0.38],
+    [0.48, 255, 235,  59, 0.52],
+    [0.68, 255, 152,   0, 0.65],
+    [1.00, 239,  83,  80, 0.82],
+  ], t);
+}
+
+// Escala para grid 2D histórico — curva SUAVE, sin huecos negros
+// Arranca visible desde 0.01 (verde tenue) → rojo intenso en 0.75+
+// Igual que TradingDifferent/Coinglass: toda celda tiene al menos un color base
+function heatColor2D(t) {
+  return _lerpColor([
+    [0.00,  20, 100,  60, 0.00],   // negro→verde invisible (ruido absoluto)
+    [0.02,  27, 120,  55, 0.12],   // verde muy oscuro — empieza a verse
+    [0.12,  46, 160,  67, 0.28],   // verde tenue — zona fría
+    [0.28,  76, 175,  80, 0.42],   // verde medio
+    [0.44, 180, 210,  40, 0.55],   // amarillo-verde
+    [0.58, 255, 220,  20, 0.65],   // amarillo
+    [0.72, 255, 140,   0, 0.74],   // naranja
+    [0.85, 239,  83,  80, 0.82],   // rojo
+    [1.00, 200,  20,  20, 0.90],   // rojo oscuro intenso
+  ], t);
+}
+
+// Colores fijos por leverage group para las barras del panel derecho
+const LEV_BAR_COLORS = {
+  '10x':    { long: 'rgba(34,197,94,',  short: 'rgba(239,68,68,'  },  // verde / rojo
+  '20-25x': { long: 'rgba(251,191,36,', short: 'rgba(251,146,60,' },  // amarillo / naranja
+  '50x':    { long: 'rgba(249,115,22,', short: 'rgba(220,38,38,'  },  // naranja / rojo oscuro
+  '100x':   { long: 'rgba(239,68,68,',  short: 'rgba(185,28,28,'  },  // rojo / rojo intenso
+  '3x':     { long: 'rgba(56,189,248,', short: 'rgba(168,85,247,' },
+  '5x':     { long: 'rgba(74,222,128,', short: 'rgba(250,204,21,' },
+};
+function _levBarColor(levKey, side, alpha) {
+  const c = LEV_BAR_COLORS[levKey] || LEV_BAR_COLORS['10x'];
+  return (c[side] || c.long) + alpha + ')';
+}
+
+// ── Heatmap overlay — panel lateral estilo Coinglass ─────────────────────
+// Panel derecho ~25%: barras por leverage con glow, anti-colisión de labels
+// y pill de fondo para máxima legibilidad. Velas 100% libres a la izquierda.
+function drawOverlay() {
+  if (!overlayCtx || !candleSeries) return;
+  const w = overlayCanvas.offsetWidth;
+  const h = overlayCanvas.offsetHeight;
+  overlayCtx.clearRect(0, 0, w, h);
+
+  if (!controls.heatmap || !lastData) return;
+
+  const g2d       = lastData.grid2d  || {};
+  const levGroups = g2d.lev_groups   || [];
+  const aggGrids  = g2d.agg_grids    || {};
+  const n         = g2d.agg_n_bins   || 0;
+  const aRange    = g2d.agg_range    || 0.40;
+  const bSz       = g2d.agg_bin_size || 0.0025;
+  const ref       = g2d.precio_ref   || 0;
+
+  if (!n || !ref || !levGroups.length) return;
+
+  // ── Layout ──────────────────────────────────────────────────────────
+  const PRICE_SCALE_W = 62;
+  const PANEL_W       = Math.min(300, Math.max(210, (w - PRICE_SCALE_W) * 0.26));
+  const PANEL_X       = w - PRICE_SCALE_W - PANEL_W;
+  const PAD_L         = 6;
+  const LABEL_FONT    = '10px "JetBrains Mono", monospace';
+  const LABEL_H       = 13;                        // alto de la pill
+  const LABEL_PAD_X   = 5;                         // padding horizontal pill
+  const BAR_H         = 6;
+  const BAR_X         = PANEL_X + PAD_L;
+  const BAR_MAX_W     = PANEL_W - PAD_L - 90;      // deja 90px para la pill
+  const LABEL_X       = BAR_X + BAR_MAX_W + 4;
+  const TOP_PER_SIDE  = 4;                          // top 4 por side por grupo
+  const MIN_Y_GAP     = 14;                         // px mínimo entre labels
+  const minHeat       = controls.threshold;
+
+  // ── Helper: formato de precio ────────────────────────────────────────
+  const fmtPrice = (p) => {
+    if (p >= 1000)  return (p / 1000).toFixed(p >= 10000 ? 1 : 2) + 'k';
+    if (p >= 100)   return p.toFixed(1);
+    if (p >= 1)     return p.toFixed(3);
+    return p.toFixed(5);
+  };
+
+  // ── Fondo del panel ──────────────────────────────────────────────────
+  overlayCtx.save();
+  overlayCtx.fillStyle = 'rgba(12,16,24,0.32)';
+  overlayCtx.fillRect(PANEL_X, 0, PANEL_W, h);
+  overlayCtx.strokeStyle = 'rgba(90,110,140,0.22)';
+  overlayCtx.lineWidth = 1;
+  overlayCtx.beginPath();
+  overlayCtx.moveTo(PANEL_X + 0.5, 0);
+  overlayCtx.lineTo(PANEL_X + 0.5, h);
+  overlayCtx.stroke();
+
+  overlayCtx.globalAlpha = controls.opacity;
+  overlayCtx.font = LABEL_FONT;
+  overlayCtx.textBaseline = 'middle';
+  overlayCtx.textAlign = 'left';
+
+  // ── Recolectar TODOS los picos de todos los grupos en una sola lista ─
+  // Ordenar globalmente por heat → los más calientes siempre ganan el label.
+  const allPeaks = [];
+  for (const lk of levGroups) {
+    if (!controls.leverage[lk]) continue;
+    const agd = aggGrids[lk];
+    if (!agd) continue;
+
+    if (controls.side !== 'short') {
+      const longs = [];
+      for (let bi = 0; bi < n; bi++) {
+        const v = agd.long[bi] || 0;
+        if (v > minHeat) longs.push({ bi, heat: v, side: 'long', lk });
+      }
+      longs.sort((a, b) => b.heat - a.heat);
+      for (let i = 0; i < Math.min(TOP_PER_SIDE, longs.length); i++) allPeaks.push(longs[i]);
+    }
+    if (controls.side !== 'long') {
+      const shorts = [];
+      for (let bi = 0; bi < n; bi++) {
+        const v = agd.short[bi] || 0;
+        if (v > minHeat) shorts.push({ bi, heat: v, side: 'short', lk });
+      }
+      shorts.sort((a, b) => b.heat - a.heat);
+      for (let i = 0; i < Math.min(TOP_PER_SIDE, shorts.length); i++) allPeaks.push(shorts[i]);
+    }
+  }
+
+  // Ordenar todo por heat desc → prioridad de label para los más intensos
+  allPeaks.sort((a, b) => b.heat - a.heat);
+
+  // ── Resolver coordenadas Y y filtrar fuera del canvas ───────────────
+  const resolved = [];
+  for (const p of allPeaks) {
+    const price = ref * (1 - aRange + (p.bi + 0.5) * bSz);
+    const y = candleSeries.priceToCoordinate(price);
+    if (y == null || y < 4 || y > h - 4) continue;
+    resolved.push({ ...p, price, y });
+  }
+
+  // ── Dibujar barras (todas, sin anti-colisión — las barras se pueden solapar) ──
+  for (const p of resolved) {
+    const heat = Math.min(1, p.heat);
+    const barW = Math.max(2, heat * BAR_MAX_W);
+    const yTop = Math.round(p.y - BAR_H / 2);
+    const ramp = _getLevRamp(p.lk);
+
+    // Color por modo
+    let fill;
+    if (controls.colorMode === 'mono') {
+      const a = Math.min(0.85, 0.20 + heat * 0.70).toFixed(2);
+      fill = `rgba(200,220,255,${a})`;
+    } else if (controls.colorMode === 'split') {
+      const a = Math.min(0.90, 0.25 + heat * 0.65).toFixed(2);
+      fill = p.side === 'long' ? `rgba(38,166,154,${a})` : `rgba(239,83,80,${a})`;
+    } else {
+      fill = _lerpRamp(ramp, heat);
+    }
+
+    // Glow en picos calientes (heat > 0.45)
+    if (heat > 0.45) {
+      const glowColor = p.side === 'long' ? '#26a69a' : '#ef5350';
+      overlayCtx.shadowColor    = glowColor;
+      overlayCtx.shadowBlur     = 8 + heat * 10;
+      overlayCtx.shadowOffsetX  = 0;
+      overlayCtx.shadowOffsetY  = 0;
+    } else {
+      overlayCtx.shadowBlur = 0;
+    }
+
+    overlayCtx.fillStyle = fill;
+    overlayCtx.fillRect(BAR_X, yTop, barW, BAR_H);
+
+    // Apagar glow antes del borde blanco (evita halo en el borde)
+    overlayCtx.shadowBlur = 0;
+    overlayCtx.fillStyle = 'rgba(255,255,255,0.18)';
+    overlayCtx.fillRect(BAR_X + barW - 1, yTop, 1, BAR_H);
+  }
+
+  // ── Dibujar labels con anti-colisión y pill de fondo ────────────────
+  // Recorremos en orden de heat desc → los más calientes reservan su slot primero.
+  const usedY = [];   // Y centrales ya ocupadas
+
+  for (const p of resolved) {
+    const y = p.y;
+
+    // ¿Hay otro label demasiado cerca?
+    const tooClose = usedY.some(uy => Math.abs(uy - y) < MIN_Y_GAP);
+    if (tooClose) continue;
+    usedY.push(y);
+
+    const label   = `${p.lk} ${fmtPrice(p.price)}`;
+    const txtW    = overlayCtx.measureText(label).width;
+    const pillW   = txtW + LABEL_PAD_X * 2;
+    const pillX   = LABEL_X;
+    const pillY   = Math.round(y - LABEL_H / 2);
+    const pillR   = 3;   // border-radius
+
+    // ── Pill de fondo ────────────────────────────────────────────────
+    const bgColor = p.side === 'long'
+      ? 'rgba(15, 38, 35, 0.82)'
+      : 'rgba(42, 16, 16, 0.82)';
+    const borderColor = p.side === 'long'
+      ? 'rgba(38,166,154,0.55)'
+      : 'rgba(239,83,80,0.55)';
+
+    overlayCtx.fillStyle   = bgColor;
+    overlayCtx.strokeStyle = borderColor;
+    overlayCtx.lineWidth   = 0.8;
+    overlayCtx.beginPath();
+    overlayCtx.roundRect(pillX, pillY, pillW, LABEL_H, pillR);
+    overlayCtx.fill();
+    overlayCtx.stroke();
+
+    // ── Texto ────────────────────────────────────────────────────────
+    overlayCtx.fillStyle = p.side === 'long'
+      ? 'rgba(160,240,210,0.97)'
+      : 'rgba(255,170,170,0.97)';
+    overlayCtx.fillText(label, pillX + LABEL_PAD_X, y);
+  }
+
+  overlayCtx.restore();
+}
+
+// ── Inicialización del chart ──────────────────────────────────────
+function initChart() {
+  const container = document.getElementById('chart-container');
+  container.style.background = '#0a0a0a';   // forzar oscuro siempre, independiente del tema
+
+  chart = LightweightCharts.createChart(container, {
+    layout: {
+      background:   { color: 'rgba(0,0,0,0)' },  // transparente → deja ver el canvas overlay
+      textColor:    '#6b7280',
+      fontFamily:   "'JetBrains Mono', monospace",
+      fontSize:     11,
+    },
+    grid: {
+      vertLines: { color: '#1a1a1a' },
+      horzLines: { color: '#1a1a1a' },
+    },
+    crosshair: {
+      mode: LightweightCharts.CrosshairMode.Normal,
+      vertLine: { color: '#374151', labelBackgroundColor: '#1f2937' },
+      horzLine: { color: '#374151', labelBackgroundColor: '#1f2937' },
+    },
+    rightPriceScale: {
+      borderColor:        '#1f2937',
+      scaleMargins:       { top: 0.05, bottom: 0.25 },
+      autoScale:          true,
+    },
+    timeScale: {
+      borderColor:        '#1f2937',
+      timeVisible:        true,
+      secondsVisible:     false,
+      rightOffset:        8,
+      barSpacing:         6,
+    },
+    handleScroll:   { mouseWheel: true, pressedMouseMove: true },
+    handleScale:    { mouseWheel: true, pinch: true },
+  });
+
+  // Overlay canvas DESPUÉS de LW Charts — queda encima de todos sus canvas
+  initOverlay(container);
+
+  // Candlestick series
+  candleSeries = chart.addCandlestickSeries({
+    upColor:     '#26a69a',
+    downColor:   '#ef5350',
+    borderVisible: false,
+    wickUpColor:   '#26a69a',
+    wickDownColor: '#ef5350',
+  });
+
+  // Volume histogram — mismo pane, escala independiente
+  volSeries = chart.addHistogramSeries({
+    priceFormat:  { type: 'volume' },
+    priceScaleId: 'vol',
+  });
+  volSeries.priceScale().applyOptions({
+    scaleMargins: { top: 0.80, bottom: 0 },
+    visible:      false,   // ocultar etiqueta de volumen en el eje derecho
+  });
+
+  // Redraw overlay al hacer pan/zoom horizontal (API v3 nativa)
+  chart.timeScale().subscribeVisibleLogicalRangeChange(() => {
+    requestAnimationFrame(drawOverlay);
+  });
+  // Redraw al hacer zoom vertical (arrastrar eje Y o wheel sobre él)
+  // subscribeVisiblePriceRangeChange no existe en v3 → usamos eventos del DOM
+  container.addEventListener('pointerup', () => {
+    requestAnimationFrame(drawOverlay);
+  });
+  container.addEventListener('wheel', () => {
+    requestAnimationFrame(drawOverlay);
+  }, { passive: true });
+
+  // Responsive resize — chart + overlay
+  new ResizeObserver(entries => {
+    if (!entries.length) return;
+    const { width, height } = entries[0].contentRect;
+    chart.applyOptions({ width, height });
+    sizeOverlay(width, height);
+    requestAnimationFrame(drawOverlay);
+  }).observe(container);
+}
+
+// ── Helpers de formato ────────────────────────────────────────────
+const fmt = (n, decimals = 0) =>
+  n == null ? '—' : '$' + Number(n).toLocaleString('en-US', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+
+const fmtM = (n) =>
+  n == null ? '—' : '$' + (n / 1e6).toFixed(1) + 'M';
+
+// ── Cargar datos y dibujar ────────────────────────────────────────
+async function loadData() {
+  showLoading(true);
+  hideError();
+
+  const refreshBtn = document.getElementById('refresh-btn');
+  refreshBtn.classList.add('spinning');
+
+  try {
+    const res  = await fetch(`/api/depth/data?tf=${currentTf}`);
+    const data = await res.json();
+
+    if (!data.ok) throw new Error(data.error || 'Error desconocido');
+
+    // ── Velas ───────────────────────────────────────────────────
+    candleSeries.setData(data.candles);
+    volSeries.setData(data.volumes);
+    if (_firstLoad) {
+      chart.timeScale().fitContent();
+      _firstLoad = false;
+    }
+
+    // ── Precio actual ───────────────────────────────────────────
+    if (data.precio_actual) {
+      updatePriceDisplay(data);
+    }
+
+    // ── Price lines ─────────────────────────────────────────────
+    drawPriceLines(data);
+
+    // ── Canvas overlay (heatmap de liquidaciones) ───────────────
+    lastData = data;
+    requestAnimationFrame(drawOverlay);
+
+    // ── Leverage checkboxes — dinámicos según TF ────────────────
+    if (data.grid2d && data.grid2d.lev_groups) {
+      updateLevCheckboxes(data.grid2d.lev_groups);
+    }
+
+    // ── Info bar ────────────────────────────────────────────────
+    updateInfoBar(data);
+
+  } catch (err) {
+    showError(err.message);
+    console.error('[Depth] loadData error:', err);
+  } finally {
+    showLoading(false);
+    refreshBtn.classList.remove('spinning');
+  }
+}
+
+// ── Precio en toolbar ─────────────────────────────────────────────
+function updatePriceDisplay(data) {
+  const p = data.precio_actual;
+  document.getElementById('depth-price').textContent = fmt(p, 2).replace('$','') ;
+
+  // Calcula cambio vs última vela anterior si hay suficientes
+  if (data.candles.length >= 2) {
+    const prev  = data.candles[data.candles.length - 2].close;
+    const pctCh = ((p - prev) / prev) * 100;
+    const el    = document.getElementById('depth-change');
+    el.textContent  = (pctCh >= 0 ? '+' : '') + pctCh.toFixed(2) + '%';
+    el.className    = 'depth-price-change ' + (pctCh >= 0 ? 'up' : 'down');
+  }
+}
+
+// ── Dibujar price lines ───────────────────────────────────────────
+function addLine(opts) {
+  const line = candleSeries.createPriceLine(opts);
+  priceLines.push(line);
+}
+
+function clearPriceLines() {
+  for (const line of priceLines) {
+    try { candleSeries.removePriceLine(line); } catch(e) {}
+  }
+  priceLines = [];
+}
+
+function drawPriceLines(data) {
+  clearPriceLines();
+
+  const hm    = data.heatmap || {};
+  const price = data.precio_actual;
+  const L     = LightweightCharts.LineStyle;
+  const cl    = controls.lines;
+
+  // NOW
+  if (price && cl.now) {
+    addLine({ price, color: '#ffffff', lineWidth: 1,
+              lineStyle: L.Dashed, axisLabelVisible: true, title: 'NOW' });
+  }
+
+  // VPOC
+  if (hm.vp_poc && cl.vpoc) {
+    addLine({ price: hm.vp_poc, color: '#f59e0b', lineWidth: 1,
+              lineStyle: L.Dashed, axisLabelVisible: true, title: 'VPOC' });
+  }
+
+  // VAH / VAL
+  if (cl.vahval) {
+    if (hm.vp_vah) addLine({ price: hm.vp_vah, color: '#a78bfa', lineWidth: 1,
+                              lineStyle: L.Dotted, axisLabelVisible: true, title: 'VAH' });
+    if (hm.vp_val) addLine({ price: hm.vp_val, color: '#7c3aed', lineWidth: 1,
+                              lineStyle: L.Dotted, axisLabelVisible: true, title: 'VAL' });
+  }
+
+  // Liq levels — filtrados por leverage checklist y top 3 por lado
+  if (cl.liq) {
+    const levels = (hm.liq_levels || []).filter(lv => controls.leverage[lv.lev]);
+    const shorts = levels
+      .filter(lv => lv.side === 'short' && lv.price > (price || 0))
+      .sort((a, b) => a.price - b.price).slice(0, 3);
+    const longs = levels
+      .filter(lv => lv.side === 'long'  && lv.price < (price || Infinity))
+      .sort((a, b) => b.price - a.price).slice(0, 3);
+
+    for (const lv of [...shorts, ...longs]) {
+      const isShort = lv.side === 'short';
+      addLine({
+        price:            lv.price,
+        color:            isShort ? '#26a69a' : '#ef5350',
+        lineWidth:        1,
+        lineStyle:        L.Dotted,
+        axisLabelVisible: true,
+        title:            `Liq ${isShort ? 'S' : 'L'} ${lv.lev}`,
+      });
+    }
+  }
+
+  // Bid / Ask walls
+  if (cl.walls) {
+    const l2 = data.l2 || {};
+    if (l2.nearest_bid_wall?.price)
+      addLine({ price: l2.nearest_bid_wall.price, color: '#26a69a', lineWidth: 2,
+                lineStyle: L.SparseDotted, axisLabelVisible: true,
+                title: `Bid ${fmtM(l2.nearest_bid_wall.usd)}` });
+    if (l2.nearest_ask_wall?.price)
+      addLine({ price: l2.nearest_ask_wall.price, color: '#ef5350', lineWidth: 2,
+                lineStyle: L.SparseDotted, axisLabelVisible: true,
+                title: `Ask ${fmtM(l2.nearest_ask_wall.usd)}` });
+  }
+}
+
+// ── Info bar ──────────────────────────────────────────────────────
+function updateInfoBar(data) {
+  const hm = data.heatmap || {};
+  const l2 = data.l2 || {};
+
+  document.getElementById('info-vpoc').textContent = hm.vp_poc  ? fmt(hm.vp_poc)  : '—';
+  document.getElementById('info-vah').textContent  = hm.vp_vah  ? fmt(hm.vp_vah)  : '—';
+  document.getElementById('info-val').textContent  = hm.vp_val  ? fmt(hm.vp_val)  : '—';
+
+  // L2 imbalance — solo si hay datos
+  if (l2.imbalance_pct != null) {
+    const bias = l2.imbalance_bias || 'neutral';
+    const dot  = document.getElementById('info-imbalance-dot');
+    dot.className = 'depth-info-dot ' + (bias === 'bid' ? 'bid' : 'ask');
+    document.getElementById('info-imbalance').textContent =
+      l2.imbalance_pct.toFixed(1) + '% ' + (bias === 'bid' ? 'bid' : 'ask');
+    document.getElementById('info-imbalance-wrap').style.display = 'flex';
+  }
+
+  // Bid wall
+  if (l2.nearest_bid_wall?.price) {
+    document.getElementById('info-bid-wall').textContent =
+      fmt(l2.nearest_bid_wall.price) + ' (' + fmtM(l2.nearest_bid_wall.usd) + ')';
+    document.getElementById('info-bid-wall-wrap').style.display = 'flex';
+  }
+
+  // Ask wall
+  if (l2.nearest_ask_wall?.price) {
+    document.getElementById('info-ask-wall').textContent =
+      fmt(l2.nearest_ask_wall.price) + ' (' + fmtM(l2.nearest_ask_wall.usd) + ')';
+    document.getElementById('info-ask-wall-wrap').style.display = 'flex';
+  }
+}
+
+// ── Checkboxes de leverage dinámicos ─────────────────────────────
+// Se regeneran cada vez que cambia el TF y llegan lev_groups del backend
+let _lastLevGroups = null;
+
+function updateLevCheckboxes(levGroups) {
+  const joinedKey = levGroups.join(',');
+  if (_lastLevGroups === joinedKey) return;   // no cambió → nada que hacer
+  _lastLevGroups = joinedKey;
+
+  const container = document.getElementById('ctrl-leverage');
+  if (!container) return;
+
+  // Conservar estado actual de checks antes de regenerar
+  const prevState = { ...controls.leverage };
+
+  container.innerHTML = '';
+  controls.leverage = {};
+
+  levGroups.forEach(key => {
+    // Por defecto ON, conservando preferencia del usuario si ya existía
+    const checked = prevState[key] !== undefined ? prevState[key] : true;
+    controls.leverage[key] = checked;
+
+    const label = document.createElement('label');
+    label.className = 'ctrl-check-item';
+    label.innerHTML = `
+      <input type="checkbox" data-lev="${key}" ${checked ? 'checked' : ''}>
+      <span class="ctrl-check-box">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none"
+             stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+      </span>
+      <span class="ctrl-check-text">${key}</span>`;
+    container.appendChild(label);
+  });
+}
+
+// ── TF selector ───────────────────────────────────────────────────
+document.querySelectorAll('.tf-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentTf = btn.dataset.tf;
+    loadData();
+  });
+});
+
+// ── UI helpers ────────────────────────────────────────────────────
+function showLoading(show) {
+  const el = document.getElementById('depth-loading');
+  el.classList.toggle('hidden', !show);
+}
+function showError(msg) {
+  const el = document.getElementById('depth-error');
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('visible');
+}
+function hideError() {
+  document.getElementById('depth-error').classList.remove('visible');
+}
+
+// ── Auto-refresh ──────────────────────────────────────────────────
+function startAutoRefresh() {
+  if (autoRefreshId) clearInterval(autoRefreshId);
+  autoRefreshId = setInterval(loadData, AUTO_REFRESH_MS);
+}
+
+// ── User chip (copiado de otras páginas) ──────────────────────────
+(async () => {
+  try {
+    const r = await fetch('/api/me');
+    if (!r.ok) return;
+    const u = await r.json();
+    if (!u.email) return;
+    const chip = document.getElementById('user-chip');
+    chip.style.display = 'flex';
+    document.getElementById('user-name').textContent   = u.nombre || u.email.split('@')[0];
+    document.getElementById('dd-user-name').textContent = u.nombre || u.email.split('@')[0];
+    document.getElementById('dd-plan-badge').textContent = u.plan || 'Free';
+    if (u.avatar) {
+      document.getElementById('user-avatar').src = u.avatar;
+      document.getElementById('dd-avatar').src   = u.avatar;
+    }
+  } catch(e) {}
+})();
+
+document.getElementById('user-chip-btn')?.addEventListener('click', () => {
+  document.getElementById('user-dropdown')?.classList.toggle('open');
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('#user-chip')) {
+    document.getElementById('user-dropdown')?.classList.remove('open');
+  }
+});
+
+// ── Theme toggle ──────────────────────────────────────────────────
+const themeBtn   = document.getElementById('dd-theme-btn');
+const themeLabel = document.getElementById('dd-theme-label');
+const moonIcon   = themeBtn?.querySelector('.icon-moon');
+const sunIcon    = themeBtn?.querySelector('.icon-sun');
+let isDark = localStorage.getItem('theme') !== 'light';
+
+function applyTheme(dark) {
+  document.body.classList.toggle('theme-light', !dark);
+  if (themeLabel) themeLabel.textContent = dark ? 'Modo claro' : 'Modo oscuro';
+  if (moonIcon)  moonIcon.style.display  = dark ? '' : 'none';
+  if (sunIcon)   sunIcon.style.display   = dark ? 'none' : '';
+  // El chart depth SIEMPRE fondo oscuro — el heatmap no funciona en blanco
+  document.getElementById('chart-container').style.background = '#0a0a0a';
+  if (chart) {
+    chart.applyOptions({
+      layout: {
+        background: { color: 'rgba(0,0,0,0)' },   // transparente → muestra canvas heatmap
+        textColor:  '#6b7280',                      // texto siempre gris claro
+      },
+      grid: {
+        vertLines: { color: '#1a1a1a' },            // grid siempre oscuro
+        horzLines: { color: '#1a1a1a' },
+      },
+    });
+  }
+}
+applyTheme(isDark);
+themeBtn?.addEventListener('click', () => {
+  isDark = !isDark;
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  applyTheme(isDark);
+});
+
+// ── Panel de controles ────────────────────────────────────────────
+function initControls() {
+  const panel   = document.getElementById('ctrl-panel');
+  const gearBtn = document.getElementById('gear-btn');
+
+  // Gear toggle
+  gearBtn.addEventListener('click', () => {
+    panel.classList.toggle('open');
+    gearBtn.classList.toggle('active');
+  });
+
+  // Heatmap on/off toggle
+  document.getElementById('ctrl-heatmap').addEventListener('change', e => {
+    controls.heatmap = e.target.checked;
+    requestAnimationFrame(drawOverlay);
+  });
+
+  // Threshold slider
+  document.getElementById('ctrl-threshold').addEventListener('input', e => {
+    controls.threshold = parseInt(e.target.value) / 100;
+    document.getElementById('ctrl-threshold-val').textContent = e.target.value + '%';
+    requestAnimationFrame(drawOverlay);
+  });
+
+  // Opacity slider
+  document.getElementById('ctrl-opacity').addEventListener('input', e => {
+    controls.opacity = parseInt(e.target.value) / 100;
+    document.getElementById('ctrl-opacity-val').textContent = e.target.value + '%';
+    requestAnimationFrame(drawOverlay);
+  });
+
+  // Color mode buttons
+  document.getElementById('ctrl-color').addEventListener('click', e => {
+    const btn = e.target.closest('.ctrl-mode-btn');
+    if (!btn) return;
+    document.querySelectorAll('#ctrl-color .ctrl-mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    controls.colorMode = btn.dataset.val;
+    requestAnimationFrame(drawOverlay);
+  });
+
+  // Side buttons
+  document.getElementById('ctrl-side').addEventListener('click', e => {
+    const btn = e.target.closest('.ctrl-mode-btn');
+    if (!btn) return;
+    document.querySelectorAll('#ctrl-side .ctrl-mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    controls.side = btn.dataset.val;
+    requestAnimationFrame(drawOverlay);
+  });
+
+  // Leverage checkboxes — el click llega por delegación desde el container dinámico
+  document.getElementById('ctrl-leverage').addEventListener('change', e => {
+    const cb = e.target;
+    if (!cb.dataset.lev) return;
+    controls.leverage[cb.dataset.lev] = cb.checked;
+    if (lastData) drawPriceLines(lastData);
+    requestAnimationFrame(drawOverlay);
+  });
+
+  // Price lines checkboxes
+  document.getElementById('ctrl-lines').addEventListener('change', e => {
+    const cb = e.target;
+    if (!cb.dataset.line) return;
+    controls.lines[cb.dataset.line] = cb.checked;
+    if (lastData) drawPriceLines(lastData);
+  });
+}
+
+// Hotkey H → toggle heatmap
+document.addEventListener('keydown', e => {
+  if ((e.key === 'h' || e.key === 'H') && !e.ctrlKey && !e.metaKey) {
+    const cb = document.getElementById('ctrl-heatmap');
+    cb.checked = !cb.checked;
+    controls.heatmap = cb.checked;
+    requestAnimationFrame(drawOverlay);
+  }
+});
+
+// ── Boot ──────────────────────────────────────────────────────────
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => {
+    initControls();
+    initChart();
+    loadData();
+    startAutoRefresh();
+  });
+});
+</script>
+</body>
+</html>

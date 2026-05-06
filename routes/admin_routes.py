@@ -10,12 +10,12 @@ Endpoints:
 """
 
 import hmac
-import os
 import logging
 from datetime import date
 
 from flask import Blueprint, request, jsonify
 from models import db, Usuario, UsoDiario, HistorialChat, Journal
+from config import ADMIN_TOKEN
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +24,8 @@ admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 # ── Helper — verificar token ─────────────────────────────────
 def _check_token() -> bool:
     """Compara el Bearer token de forma segura contra timing attacks."""
-    admin_token = os.getenv("ADMIN_TOKEN", "")
-    auth = request.headers.get("Authorization", "")
-    expected = f"Bearer {admin_token}"
+    auth     = request.headers.get("Authorization", "")
+    expected = f"Bearer {ADMIN_TOKEN}"
     return hmac.compare_digest(auth, expected)
 
 def _unauthorized():

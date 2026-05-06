@@ -30,13 +30,13 @@ load_dotenv()
 # CONFIGURACIÓN
 # ════════════════════════════════════════════════════════
 
-KB_PATH          = os.getenv("KB_PATH", r"C:\Users\stanley\Desktop\copy\base_conocimiento")
+KB_PATH          = os.getenv("KB_PATH", os.path.join(os.path.dirname(__file__), "base_conocimiento"))
 COLECCION_CHROMA = "killaxbt"
 COLECCION_QDRANT = "killaxbt"   # mismo nombre en Qdrant
 BATCH_SIZE       = 100          # chunks por batch — no saturar la API
 VECTOR_SIZE      = 384          # dimensión del embedding de ChromaDB DefaultEmbeddingFunction
 
-QDRANT_URL     = os.getenv("QDRANT_URL", "https://99dbcaf3-d466-423e-9156-df916bc804a6.us-east-1-1.aws.cloud.qdrant.io")
+QDRANT_URL     = os.getenv("QDRANT_URL", "")
 QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
 
 if not QDRANT_API_KEY:

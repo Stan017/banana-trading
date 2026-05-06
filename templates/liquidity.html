@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="/static/bananaTradeLogo2.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Liquidity Map — Banana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+/* ══════════════════════════════════════
+   LIQUIDITY MAP — estilos específicos
+══════════════════════════════════════ */
+
+.liq-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg0);
+}
+
+.liq-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg4) transparent;
+}
+.liq-inner::-webkit-scrollbar { width: 4px; }
+.liq-inner::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+
+/* Title row */
+.liq-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 20px 0 16px;
+}
+.liq-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.5px;
+}
+.liq-title span { color: var(--blue); }
+.liq-subtitle {
+  font-size: 12px;
+  color: var(--text3);
+}
+.liq-refresh-btn {
+  margin-left: auto;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text2);
+  font-size: 11px;
+  font-family: var(--font);
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background .15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.liq-refresh-btn:hover { background: var(--bg4); color: var(--text); }
+.liq-refresh-btn svg { flex-shrink: 0; }
+
+/* Timestamp */
+.liq-ts-row {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: var(--mono);
+  text-align: right;
+  margin-bottom: 10px;
+}
+
+/* Top grid: L2 + Zonas */
+.liq-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+/* Cards */
+.liq-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.liq-card-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.liq-card-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+  background: var(--bg3);
+  color: var(--text3);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.liq-card-badge.live {
+  background: rgba(34,197,94,.12);
+  color: var(--green);
+  border: 1px solid rgba(34,197,94,.25);
+}
+
+/* Imbalance bar */
+.liq-imbalance-wrap { margin-bottom: 14px; }
+.liq-imbalance-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+.liq-imbalance-track {
+  height: 8px;
+  background: rgba(239,68,68,.2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.liq-imbalance-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width .4s ease;
+}
+
+/* Order book walls */
+.liq-walls-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.liq-wall-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 11.5px;
+}
+.liq-wall-price {
+  width: 90px;
+  font-family: var(--mono);
+  color: var(--text);
+  flex-shrink: 0;
+}
+.liq-wall-bar-track {
+  flex: 1;
+  height: 5px;
+  background: var(--bg3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.liq-wall-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .4s;
+}
+.liq-wall-bar-fill.ask { background: rgba(239,68,68,.6); }
+.liq-wall-bar-fill.bid { background: rgba(34,197,94,.6); }
+.liq-wall-usd {
+  width: 60px;
+  text-align: right;
+  font-size: 11px;
+  font-family: var(--mono);
+  color: var(--text2);
+  flex-shrink: 0;
+}
+.liq-price-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+}
+.liq-price-line-label {
+  font-size: 12px;
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--accent, var(--blue));
+  flex-shrink: 0;
+  width: 90px;
+}
+.liq-price-line-hr {
+  flex: 1;
+  border: none;
+  border-top: 1px dashed var(--accent, var(--blue));
+  opacity: .5;
+}
+
+/* Depth pills */
+.liq-depth-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+.liq-depth-pill {
+  flex: 1;
+  background: var(--bg3);
+  border-radius: 7px;
+  padding: 8px 10px;
+}
+.liq-depth-label { font-size: 9px; color: var(--text3); margin-bottom: 3px; font-weight: 600; }
+.liq-depth-val   { font-size: 13px; font-weight: 700; font-family: var(--mono); }
+
+/* Liquidation zones */
+.liq-zones-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.liq-zone-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 5px;
+  background: var(--bg3);
+}
+.liq-zone-label { font-size: 11px; color: var(--text2); }
+.liq-zone-price { font-size: 12px; font-family: var(--mono); font-weight: 600; }
+.liq-zone-price.short { color: var(--red); }
+.liq-zone-price.long  { color: var(--green); }
+.liq-zona-sep { height: 1px; background: var(--border); margin: 8px 0; }
+.liq-nota { font-size: 10px; color: var(--text3); margin-top: 10px; line-height: 1.4; }
+
+/* Heatmap full-width */
+.liq-heatmap-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 32px;
+}
+.liq-heatmap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.liq-heatmap-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.liq-heatmap-legend {
+  display: flex;
+  gap: 14px;
+  font-size: 9.5px;
+  color: var(--text3);
+  align-items: center;
+}
+.liq-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  display: inline-block;
+  margin-right: 3px;
+  vertical-align: middle;
+}
+#heatmap-rows {
+  overflow-y: auto;
+  max-height: 580px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.hm-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 18px;
+  padding: 0 6px;
+}
+.hm-row.now-price {
+  border-top: 1px solid var(--accent, #60a5fa);
+  border-bottom: 1px solid var(--accent, #60a5fa);
+}
+.hm-price {
+  width: 74px;
+  font-size: 10px;
+  font-family: var(--mono);
+  flex-shrink: 0;
+}
+.hm-pct {
+  width: 38px;
+  font-size: 8.5px;
+  color: var(--text3);
+  flex-shrink: 0;
+}
+.hm-vol-bar {
+  height: 5px;
+  background: var(--text3);
+  opacity: .35;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+.hm-badges {
+  flex: 1;
+  font-size: 8.5px;
+  white-space: nowrap;
+  overflow: hidden;
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.hm-badge {
+  padding: 0 4px;
+  border-radius: 3px;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 14px;
+  flex-shrink: 0;
+}
+.hm-badge.now  { background: var(--accent, #60a5fa); color: #000; }
+.hm-badge.poc  { background: #8b5cf6; color: #fff; }
+.hm-badge.va   { background: rgba(109,148,197,.3); color: var(--accent, #60a5fa); }
+.hm-badge.lev-long  { background: rgba(34,197,94,.2); color: var(--green); }
+.hm-badge.lev-short { background: rgba(239,68,68,.2); color: var(--red); }
+.hm-wicks { color: #f59e0b; letter-spacing: -1px; }
+
+/* VP sidebar dentro del heatmap */
+.liq-vp-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 6px;
+}
+.liq-vp-pill {
+  background: var(--bg3);
+  border-radius: 6px;
+  padding: 6px 10px;
+  text-align: center;
+}
+.liq-vp-label { font-size: 9px; color: var(--text3); font-weight: 700; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 3px; }
+.liq-vp-val   { font-size: 12px; font-family: var(--mono); color: var(--text); font-weight: 600; }
+
+/* Responsive */
+@media (max-width: 820px) {
+  .liq-top-grid { grid-template-columns: 1fr; }
+}
+/* Nav group dropdown */
+.nav-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.nav-group-trigger {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.nav-chevron {
+  opacity: 0.5;
+  transition: transform 0.2s, opacity 0.2s;
+  margin-left: 1px;
+}
+.nav-group:hover .nav-chevron {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+.nav-submenu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  background: var(--bg1, #111);
+  border: 1px solid var(--bg3, #2a2a2a);
+  border-radius: 8px;
+  padding: 10px 4px 4px;
+  min-width: 150px;
+  z-index: 200;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.nav-submenu::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
+}
+.nav-group:hover .nav-submenu {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateX(-50%) translateY(0);
+}
+.nav-sub-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--text3, #6b7280);
+  text-decoration: none;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.nav-sub-item:hover {
+  background: var(--bg2, #1a1a1a);
+  color: var(--text, #e5e7eb);
+}
+.nav-sub-item.active {
+  color: var(--blue, #3b82f6);
+  background: var(--bg2, #1a1a1a);
+}
+</style>
+</head>
+
+<body class="app-layout">
+
+<!-- MAIN — sin sidebar, full width -->
+<main class="liq-main">
+  <div class="liq-inner">
+
+    <!-- HEADER COMPARTIDO -->
+    <header class="top-header">
+      <div class="header-left"></div>
+      <div class="header-center">
+        <nav class="header-nav">
+          <a href="/" class="header-nav-link">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Home
+          </a>
+          <a href="/journal" class="header-nav-link">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            Journal
+          </a>
+          <a href="/edge" class="header-nav-link">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Edge Analytics
+          </a>
+          <div class="nav-group">
+            <a href="/liquidity" class="header-nav-link nav-group-trigger active">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              Liquidity
+              <svg class="nav-chevron" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+            </a>
+            <div class="nav-submenu">
+              <a href="/liquidity" class="nav-sub-item active">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                Liquidity Map
+              </a>
+              <a href="/depth" class="nav-sub-item">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                Market Depth
+              </a>
+            </div>
+          </div>
+        </nav>
+      </div>
+      <div class="header-right">
+        <div class="status-pill" id="status-pill">
+          <span class="status-dot"></span>
+          <span>En línea</span>
+        </div>
+        <div class="user-chip" id="user-chip" style="display:none">
+          <button class="user-chip-btn" id="user-chip-btn" type="button">
+            <span class="user-chip-dot"></span>
+            <img class="user-chip-avatar" id="user-avatar" src="" alt="">
+            <span class="user-chip-name" id="user-name"></span>
+            <svg class="chip-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="user-dropdown" id="user-dropdown">
+            <div class="dd-user-info">
+              <img class="dd-avatar" id="dd-avatar" src="" alt="">
+              <div class="dd-user-text">
+                <span class="dd-user-name" id="dd-user-name">Usuario</span>
+                <span class="dd-plan-badge" id="dd-plan-badge">Free</span>
+              </div>
+            </div>
+            <div class="dd-sep"></div>
+            <button class="dd-item" id="dd-theme-btn" type="button">
+              <span class="dd-icon">
+                <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
+              </span>
+              <span id="dd-theme-label">Modo claro</span>
+            </button>
+            <div class="dd-sep"></div>
+            <a href="/perfil" class="dd-item">
+              <span class="dd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+              Mi Perfil
+            </a>
+            <div class="dd-sep"></div>
+            <a href="/logout" class="dd-item dd-logout-item">
+              <span class="dd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+              Cerrar sesión
+            </a>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- TÍTULO -->
+    <div class="liq-title-row">
+      <div class="liq-title">Liquidity <span>Map</span></div>
+      <div class="liq-subtitle">L2 Order Book · Zonas de Liquidación · Heatmap</div>
+      <button class="liq-refresh-btn" onclick="refreshAll()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+        Refresh
+      </button>
+    </div>
+    <div class="liq-ts-row" id="liq-ts">—</div>
+
+    <!-- FILA TOP: L2 + Zonas de Liquidación -->
+    <div class="liq-top-grid">
+
+      <!-- L2 ORDER BOOK -->
+      <div class="liq-card">
+        <div class="liq-card-title">
+          L2 Order Book
+          <span class="liq-card-badge live" id="l2-badge">live</span>
+        </div>
+        <div id="l2-content">
+          <div style="color:var(--text3);font-size:12px">Cargando...</div>
+        </div>
+      </div>
+
+      <!-- ZONAS DE LIQUIDACIÓN -->
+      <div class="liq-card">
+        <div class="liq-card-title">
+          Zonas de Liquidación
+          <span class="liq-card-badge">estimadas</span>
+        </div>
+        <div id="zones-content">
+          <div style="color:var(--text3);font-size:12px">Cargando...</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- HEATMAP FULL-WIDTH -->
+    <div class="liq-heatmap-card">
+      <div class="liq-heatmap-header">
+        <span class="liq-heatmap-title">Liquidation Heatmap</span>
+        <div class="liq-heatmap-legend">
+          <span><span class="liq-legend-dot" style="background:rgba(34,197,94,.35)"></span>Long liq</span>
+          <span><span class="liq-legend-dot" style="background:rgba(239,68,68,.35)"></span>Short liq</span>
+          <span><span class="liq-legend-dot" style="background:#8b5cf6"></span>POC</span>
+          <span><span class="liq-legend-dot" style="background:rgba(109,148,197,.3)"></span>Value Area</span>
+          <span><span style="color:#f59e0b">·</span> Wicks hist.</span>
+        </div>
+      </div>
+
+      <!-- VP pills: POC / VAH / VAL -->
+      <div class="liq-vp-strip" id="vp-strip" style="display:none">
+        <div class="liq-vp-pill">
+          <div class="liq-vp-label">POC</div>
+          <div class="liq-vp-val" id="vp-poc">—</div>
+        </div>
+        <div class="liq-vp-pill">
+          <div class="liq-vp-label">VAH</div>
+          <div class="liq-vp-val" id="vp-vah">—</div>
+        </div>
+        <div class="liq-vp-pill">
+          <div class="liq-vp-label">VAL</div>
+          <div class="liq-vp-val" id="vp-val">—</div>
+        </div>
+      </div>
+
+      <div id="heatmap-rows">
+        <div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Calculando heatmap...</div>
+      </div>
+      <div style="font-size:9.5px;color:var(--text3);margin-top:8px">
+        Leverage math + Volume Profile 500H + Wick history · No representa posiciones reales
+      </div>
+    </div>
+
+  </div><!-- /liq-inner -->
+</main>
+
+<script src="/static/ui.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════════════════
+// LIQUIDITY MAP — lógica de página
+// ══════════════════════════════════════════════════════════════════════
+
+async function cargarL2() {
+  const el = document.getElementById('l2-content');
+  try {
+    const res = await fetch('/api/liquidity');
+    const d   = await res.json();
+    if (!d.ok) throw new Error(d.error || 'Error');
+
+    const precio = d.precio_ref || 0;
+    const imb    = d.imbalance_pct || 50;
+    const bias   = d.imbalance_bias || 'neutral';
+    const imbColor = bias === 'bid' ? 'var(--green)' : bias === 'ask' ? 'var(--red)' : '#f59e0b';
+
+    const imbHtml = `
+      <div class="liq-imbalance-wrap">
+        <div class="liq-imbalance-label">
+          <span style="color:var(--green)">BID ${imb.toFixed(1)}%</span>
+          <span style="color:var(--text3);font-size:10px">Imbalance</span>
+          <span style="color:var(--red)">ASK ${(100-imb).toFixed(1)}%</span>
+        </div>
+        <div class="liq-imbalance-track">
+          <div class="liq-imbalance-fill" style="width:${imb}%;background:${imbColor}"></div>
+        </div>
+      </div>`;
+
+    const allWalls = [...(d.top_asks||[]), ...(d.top_bids||[])];
+    const maxUsd   = allWalls.reduce((m,w) => Math.max(m, w.usd||0), 1);
+    const asks     = (d.top_asks||[]).slice(0,5).sort((a,b) => b.price-a.price);
+    const bids     = (d.top_bids||[]).slice(0,5).sort((a,b) => b.price-a.price);
+
+    const wallRow = (w, type) => {
+      const pct = Math.round((w.usd / maxUsd) * 100);
+      const m   = w.usd >= 1e6 ? `$${(w.usd/1e6).toFixed(2)}M` : `$${(w.usd/1e3).toFixed(0)}K`;
+      return `<div class="liq-wall-row">
+        <div class="liq-wall-price">$${w.price.toLocaleString()}</div>
+        <div class="liq-wall-bar-track"><div class="liq-wall-bar-fill ${type}" style="width:${pct}%"></div></div>
+        <div class="liq-wall-usd">${m}</div>
+      </div>`;
+    };
+
+    const wallsHtml = `
+      <div class="liq-walls-title">Order Book Walls</div>
+      ${asks.map(w => wallRow(w,'ask')).join('')}
+      <div class="liq-price-line">
+        <div class="liq-price-line-label">$${precio.toLocaleString()}</div>
+        <hr class="liq-price-line-hr">
+      </div>
+      ${bids.map(w => wallRow(w,'bid')).join('')}`;
+
+    const bd1 = d.bid_depth_1pct || 0;
+    const ad1 = d.ask_depth_1pct || 0;
+    const depthHtml = `
+      <div class="liq-depth-row">
+        <div class="liq-depth-pill">
+          <div class="liq-depth-label">BID ±1%</div>
+          <div class="liq-depth-val" style="color:var(--green)">$${(bd1/1e6).toFixed(1)}M</div>
+        </div>
+        <div class="liq-depth-pill">
+          <div class="liq-depth-label">ASK ±1%</div>
+          <div class="liq-depth-val" style="color:var(--red)">$${(ad1/1e6).toFixed(1)}M</div>
+        </div>
+      </div>`;
+
+    el.innerHTML = imbHtml + wallsHtml + depthHtml;
+
+    const now = new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('liq-ts').textContent = `L2 snapshot · ${now}`;
+
+    // Cargar zonas por separado
+    _renderZonas(d);
+
+  } catch(err) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:12px">Error: ${err.message}</div>`;
+  }
+}
+
+function _renderZonas(d) {
+  const el = document.getElementById('zones-content');
+  if (!el) return;
+
+  const ll = d.liq_longs  || {};
+  const ls = d.liq_shorts || {};
+
+  const zoneRow = (label, price, type, lev) => `
+    <div class="liq-zone-row">
+      <div>
+        <div class="liq-zone-label">${label}</div>
+        <div style="font-size:9px;color:var(--text3)">${lev}x leverage</div>
+      </div>
+      <div class="liq-zone-price ${type}">$${Number(price).toLocaleString()}</div>
+    </div>`;
+
+  const shortRows = [
+    ls['10x'] ? zoneRow('Liq. Shorts', ls['10x'], 'short', 10) : '',
+    ls['25x'] ? zoneRow('Liq. Shorts', ls['25x'], 'short', 25) : '',
+    ls['50x'] ? zoneRow('Liq. Shorts', ls['50x'], 'short', 50) : '',
+  ].filter(Boolean).join('');
+
+  const longRows = [
+    ll['50x'] ? zoneRow('Liq. Longs', ll['50x'], 'long', 50) : '',
+    ll['25x'] ? zoneRow('Liq. Longs', ll['25x'], 'long', 25) : '',
+    ll['10x'] ? zoneRow('Liq. Longs', ll['10x'], 'long', 10) : '',
+  ].filter(Boolean).join('');
+
+  el.innerHTML = `
+    <div class="liq-zones-title">Shorts arriba ↑ — imán alcista (squeeze)</div>
+    ${shortRows}
+    <div class="liq-zona-sep"></div>
+    <div class="liq-zones-title">Longs abajo ↓ — imán bajista (cascade)</div>
+    ${longRows}
+    <div class="liq-nota">Estimación matemática desde precio actual — no representa posiciones reales</div>`;
+}
+
+async function cargarHeatmap() {
+  const box = document.getElementById('heatmap-rows');
+  try {
+    const r = await fetch('/api/liquidity/heatmap');
+    const d = await r.json();
+    if (!d.ok || !d.bins?.length) {
+      box.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Heatmap no disponible</div>';
+      return;
+    }
+
+    const bins      = d.bins;
+    const precio    = d.precio_ref;
+    const poc       = d.vp_poc;
+    const vah       = d.vp_vah;
+    const val       = d.vp_val;
+    const liqLevels = d.liq_levels || [];
+
+    // VP pills
+    if (poc) {
+      document.getElementById('vp-poc').textContent = `$${poc.toLocaleString()}`;
+      document.getElementById('vp-vah').textContent = `$${vah.toLocaleString()}`;
+      document.getElementById('vp-val').textContent = `$${val.toLocaleString()}`;
+      document.getElementById('vp-strip').style.display = 'grid';
+    }
+
+    // Mostrar ±14% del precio actual
+    const visible  = bins.filter(b => Math.abs(b.pct) <= 14);
+    const maxVol   = Math.max(...visible.map(b => b.vol), 0.01);
+    const maxDLong = Math.max(...visible.map(b => b.d_long), 0.01);
+    const maxDShort= Math.max(...visible.map(b => b.d_short), 0.01);
+
+    let rows = '';
+    [...visible].reverse().forEach(b => {
+      const isNow   = Math.abs(b.price - precio) / precio < 0.003;
+      const isPoc   = poc && Math.abs(b.price - poc) / poc < 0.003;
+      const isVah   = vah && Math.abs(b.price - vah) / vah < 0.003;
+      const isVal   = val && Math.abs(b.price - val) / val < 0.003;
+      const liqInfo = liqLevels.find(l => Math.abs(l.price - b.price) / b.price < 0.003);
+
+      const longDens  = b.d_long  / maxDLong;
+      const shortDens = b.d_short / maxDShort;
+      const volW      = Math.round((b.vol / maxVol) * 64);
+
+      let bgStyle = '';
+      if (shortDens > 0.08)
+        bgStyle = `background:rgba(239,68,68,${(shortDens * 0.30).toFixed(2)})`;
+      else if (longDens > 0.08)
+        bgStyle = `background:rgba(34,197,94,${(longDens * 0.30).toFixed(2)})`;
+
+      const priceColor = b.pct > 0 ? 'var(--red)' : b.pct < 0 ? 'var(--green)' : 'var(--accent,#60a5fa)';
+
+      let badges = '';
+      if (isNow)   badges += `<span class="hm-badge now">NOW</span>`;
+      if (isPoc)   badges += `<span class="hm-badge poc">POC</span>`;
+      if (isVah)   badges += `<span class="hm-badge va">VAH</span>`;
+      if (isVal)   badges += `<span class="hm-badge va">VAL</span>`;
+      if (liqInfo) badges += `<span class="hm-badge ${liqInfo.side==='long'?'lev-long':'lev-short'}">${liqInfo.lev}</span>`;
+      if (b.wicks > 0) badges += `<span class="hm-wicks" title="${b.wicks} wicks">${'·'.repeat(Math.min(b.wicks,5))}</span>`;
+
+      rows += `
+        <div class="hm-row${isNow?' now-price':''}" style="${bgStyle}">
+          <span class="hm-price" style="color:${isNow?'var(--accent,#60a5fa)':priceColor}">$${b.price.toLocaleString()}</span>
+          <span class="hm-pct">${b.pct>0?'+':''}${b.pct.toFixed(1)}%</span>
+          <div class="hm-vol-bar" style="width:${volW}px"></div>
+          <div class="hm-badges">${badges}</div>
+        </div>`;
+    });
+
+    box.innerHTML = rows;
+
+  } catch(e) {
+    box.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Error: ${e.message}</div>`;
+  }
+}
+
+function refreshAll() {
+  document.getElementById('l2-content').innerHTML  = '<div style="color:var(--text3);font-size:12px">Cargando...</div>';
+  document.getElementById('zones-content').innerHTML = '<div style="color:var(--text3);font-size:12px">Cargando...</div>';
+  document.getElementById('heatmap-rows').innerHTML  = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Calculando heatmap...</div>';
+  cargarL2();
+  cargarHeatmap();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  cargarL2();
+  cargarHeatmap();
+  // L2 se refresca cada 30s (datos de mercado)
+  setInterval(cargarL2, 30_000);
+  if (typeof uiLoadUser === 'function') uiLoadUser();
+});
+</script>
+</body>
+</html>
