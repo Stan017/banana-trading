@@ -23,9 +23,9 @@ psycopg2-binary==2.9.10
 # Servidor WSGI produccion
 gunicorn==23.0.0
 
-# Vector DB — Qdrant Cloud (primario) + ChromaDB (fallback local)
+# Vector DB — Qdrant Cloud
 qdrant-client==1.9.1
-chromadb==0.6.3
+# chromadb==0.6.3  # fallback local — no instalar en produccion (demasiadas deps)
 
 # Embedder RAG — ONNX Runtime
 # fastembed reemplaza sentence-transformers+torch: ~40 MB vs ~350 MB RAM
