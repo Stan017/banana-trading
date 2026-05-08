@@ -29,8 +29,8 @@ def _check_token() -> bool:
     return hmac.compare_digest(auth, expected)
 
 def _unauthorized():
-    logger.warning(f"Acceso admin no autorizado — IP: {request.remote_addr}")
-    return jsonify({"ok": False, "error": "No autorizado"}), 401
+    logger.warning(f"Unauthorized admin access — IP: {request.remote_addr}")
+    return jsonify({"ok": False, "error": "Unauthorized"}), 401
 
 
 # ── GET /admin/usuarios ──────────────────────────────────────
@@ -94,19 +94,19 @@ def set_plan():
     plan  = data.get("plan", "").strip().lower()
 
     if not email:
-        return jsonify({"ok": False, "error": "email requerido"}), 400
+        return jsonify({"ok": False, "error": "email required"}), 400
     if plan not in ("free", "pro"):
-        return jsonify({"ok": False, "error": "plan debe ser 'free' o 'pro'"}), 400
+        return jsonify({"ok": False, "error": "plan must be 'free' or 'pro'"}), 400
 
     u = Usuario.query.filter_by(email=email).first()
     if not u:
-        return jsonify({"ok": False, "error": f"Usuario '{email}' no encontrado"}), 404
+        return jsonify({"ok": False, "error": f"User '{email}' not found"}), 404
 
     plan_anterior = u.plan
     u.plan = plan
     db.session.commit()
 
-    logger.warning(f"Admin cambió plan: {email} {plan_anterior} → {plan}")
+    logger.warning(f"Admin changed plan: {email} {plan_anterior} → {plan}")
     return jsonify({
         "ok"           : True,
         "email"        : u.email,
@@ -129,17 +129,17 @@ def toggle_activo():
     email = data.get("email", "").strip().lower()
 
     if not email:
-        return jsonify({"ok": False, "error": "email requerido"}), 400
+        return jsonify({"ok": False, "error": "email required"}), 400
 
     u = Usuario.query.filter_by(email=email).first()
     if not u:
-        return jsonify({"ok": False, "error": f"Usuario '{email}' no encontrado"}), 404
+        return jsonify({"ok": False, "error": f"User '{email}' not found"}), 404
 
     u.activo = not u.activo
     db.session.commit()
 
-    accion = "activado" if u.activo else "desactivado"
-    logger.warning(f"Admin {accion} usuario: {email}")
+    accion = "enabled" if u.activo else "disabled"
+    logger.warning(f"Admin {accion} user: {email}")
     return jsonify({
         "ok"    : True,
         "email" : u.email,

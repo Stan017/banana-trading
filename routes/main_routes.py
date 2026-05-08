@@ -60,8 +60,8 @@ def info():
 def reload_kb():
     """Recarga la KB — requiere token admin en Authorization header."""
     if not check_admin_token():
-        logger.error(f"Intento no autorizado a /reload-kb desde {get_client_ip()}")
-        return jsonify({"ok": False, "error": "No autorizado"}), 401
+        logger.error(f"Unauthorized attempt to /reload-kb from {get_client_ip()}")
+        return jsonify({"ok": False, "error": "Unauthorized"}), 401
     try:
         nuevo_count = recargar_kb()
         return jsonify({"ok": True, "chunks": nuevo_count})

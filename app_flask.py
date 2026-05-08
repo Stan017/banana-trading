@@ -1,7 +1,13 @@
 import os
+import sys
 import time
 import logging
 import threading
+
+# Allow importing stats_engine (lives in scripts/) from anywhere in the app
+_scripts_dir = os.path.join(os.path.dirname(__file__), "scripts")
+if _scripts_dir not in sys.path:
+    sys.path.insert(0, _scripts_dir)
 from datetime import timedelta
 from flask import Flask, request, jsonify, session, redirect, url_for
 from flask_login import LoginManager, current_user

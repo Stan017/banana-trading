@@ -30,13 +30,13 @@ from functools import wraps
 from flask import jsonify
 
 def pro_required(f):
-    """Bloquea el endpoint si el usuario no es Pro"""
+    """Blocks the endpoint if the user is not Pro"""
     @wraps(f)
     def decorated(*args, **kwargs):
         if not current_user.es_pro():
             return jsonify({
                 "ok": False,
-                "error": "Esta función es exclusiva del plan Pro. Upgrade para acceder al análisis profundo de tus trades.",
+                "error": "This feature is exclusive to the Pro plan. Upgrade to access deep trade analysis.",
                 "upgrade": True
             }), 403
         return f(*args, **kwargs)
@@ -515,18 +515,18 @@ def registrar_trade():
     direccion = data.get("direccion", "").strip().upper()
 
     if not activo or not direccion:
-        return jsonify({"ok": False, "error": "Activo y dirección son requeridos"}), 400
+        return jsonify({"ok": False, "error": "Asset and direction are required"}), 400
 
     if direccion not in ("LONG", "SHORT"):
-        return jsonify({"ok": False, "error": "Dirección debe ser LONG o SHORT"}), 400
+        return jsonify({"ok": False, "error": "Direction must be LONG or SHORT"}), 400
 
     try:
         entrada = float(data.get("entrada", 0))
     except (ValueError, TypeError):
-        return jsonify({"ok": False, "error": "Precio de entrada inválido"}), 400
+        return jsonify({"ok": False, "error": "Invalid entry price"}), 400
 
     if entrada <= 0:
-        return jsonify({"ok": False, "error": "El precio de entrada debe ser mayor a 0"}), 400
+        return jsonify({"ok": False, "error": "Entry price must be greater than 0"}), 400
 
     # ── Parsear campos opcionales ────────────────────────────
     sl             = float(data["sl"])  if data.get("sl")  else None
@@ -547,7 +547,7 @@ def registrar_trade():
     notas          = data.get("notas", "")[:500]
 
     if resultado and resultado not in ("WIN", "LOSS", "BE"):
-        return jsonify({"ok": False, "error": "Resultado debe ser WIN, LOSS o BE"}), 400
+        return jsonify({"ok": False, "error": "Result must be WIN, LOSS or BE"}), 400
 
     # ── Estado ───────────────────────────────────────────────
     estado = "CERRADO" if resultado else "ABIERTO"
@@ -669,7 +669,7 @@ def analisis_profundo():
     if stats.get("total", 0) < 3:
         return jsonify({
             "ok":    False,
-            "error": "Necesitas al menos 3 trades registrados para el análisis profundo."
+            "error": "You need at least 3 registered trades for deep analysis."
         }), 400
 
     try:
@@ -744,7 +744,7 @@ Pregunta del trader: {pregunta}"""
         })
 
     except Exception as e:
-        return jsonify({"ok": False, "error": "Error generando análisis. Intenta de nuevo."}), 500
+        return jsonify({"ok": False, "error": "Error generating analysis. Please try again."}), 500
 
 
 @journal_bp.route("/journal/trade/<int:trade_id>/cerrar", methods=["PATCH"])
@@ -756,21 +756,21 @@ def cerrar_trade(trade_id: int):
     """
     trade = db.session.get(Journal, trade_id)
     if not trade:
-        return jsonify({"ok": False, "error": "Trade no encontrado"}), 404
+        return jsonify({"ok": False, "error": "Trade not found"}), 404
     if trade.usuario_id != current_user.id:
-        return jsonify({"ok": False, "error": "No autorizado"}), 403
+        return jsonify({"ok": False, "error": "Unauthorized"}), 403
     if trade.estado == "CERRADO":
-        return jsonify({"ok": False, "error": "Este trade ya está cerrado"}), 400
+        return jsonify({"ok": False, "error": "This trade is already closed"}), 400
 
     data = request.json or {}
     try:
         precio_cierre = float(data["precio_cierre"])
     except (KeyError, ValueError, TypeError):
-        return jsonify({"ok": False, "error": "precio_cierre requerido"}), 400
+        return jsonify({"ok": False, "error": "precio_cierre required"}), 400
 
     resultado = (data.get("resultado") or "").upper() or None
     if resultado and resultado not in ("WIN", "LOSS", "BE"):
-        return jsonify({"ok": False, "error": "Resultado debe ser WIN, LOSS o BE"}), 400
+        return jsonify({"ok": False, "error": "Result must be WIN, LOSS or BE"}), 400
 
     # Auto-detectar resultado si no viene
     if not resultado:
@@ -828,7 +828,7 @@ def importar_csv():
     Retorna cuántos trades se importaron y cuántos se saltaron (duplicados).
     """
     if "file" not in request.files:
-        return jsonify({"ok": False, "error": "No se adjuntó archivo"}), 400
+        return jsonify({"ok": False, "error": "No file was attached"}), 400
 
     f       = request.files["file"]
     content = f.read().decode("utf-8-sig")  # utf-8-sig maneja BOM de Excel
@@ -974,7 +974,7 @@ def importar_csv():
         "importados": importados,
         "saltados":   saltados,
         "errores":    errores[:10],  # máximo 10 errores en respuesta
-        "mensaje":   f"{importados} trades importados, {saltados} saltados (duplicados o inválidos)."
+        "mensaje":   f"{importados} trades imported, {saltados} skipped (duplicates or invalid)."
     })
 
 
@@ -985,10 +985,10 @@ def borrar_trade(trade_id: int):
     trade = db.session.get(Journal, trade_id)
 
     if not trade:
-        return jsonify({"ok": False, "error": "Trade no encontrado"}), 404
+        return jsonify({"ok": False, "error": "Trade not found"}), 404
 
     if trade.usuario_id != current_user.id:
-        return jsonify({"ok": False, "error": "No autorizado"}), 403
+        return jsonify({"ok": False, "error": "Unauthorized"}), 403
 
     db.session.delete(trade)
     db.session.commit()

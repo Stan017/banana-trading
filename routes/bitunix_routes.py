@@ -50,7 +50,7 @@ def status():
     except Exception as e:
         log.warning("bitunix status error uid=%s: %s", current_user.id, e)
         return jsonify({"ok": False, "configurado": True,
-                        "error": "Claves inválidas o error de red"}), 200
+                        "error": "Invalid keys or network error"}), 200
 
 
 # ────────────────────────────────────────────────────────────
@@ -65,21 +65,21 @@ def save_keys():
     secret_key = (data.get("secret_key") or "").strip()
 
     if not api_key or not secret_key:
-        return jsonify({"ok": False, "error": "api_key y secret_key son requeridos"}), 400
+        return jsonify({"ok": False, "error": "api_key and secret_key are required"}), 400
 
-    # Longitud máxima para evitar basura
+    # Max length to avoid garbage input
     if len(api_key) > 128 or len(secret_key) > 128:
-        return jsonify({"ok": False, "error": "Clave demasiado larga"}), 400
+        return jsonify({"ok": False, "error": "Key too long"}), 400
 
-    # Validar antes de guardar
+    # Validate before saving
     if not bx.validate_keys(api_key, secret_key):
         return jsonify({"ok": False,
-                        "error": "Las claves no son válidas o no tienen permisos de lectura"}), 400
+                        "error": "Invalid keys or missing read permissions"}), 400
 
     current_user.bitunix_api_key    = api_key
     current_user.bitunix_secret_key = secret_key
     db.session.commit()
-    return jsonify({"ok": True, "mensaje": "Claves guardadas correctamente"})
+    return jsonify({"ok": True, "mensaje": "Keys saved successfully"})
 
 
 # ────────────────────────────────────────────────────────────
@@ -92,7 +92,7 @@ def delete_keys():
     current_user.bitunix_api_key    = None
     current_user.bitunix_secret_key = None
     db.session.commit()
-    return jsonify({"ok": True, "mensaje": "Claves eliminadas"})
+    return jsonify({"ok": True, "mensaje": "Keys deleted"})
 
 
 # ────────────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ def delete_keys():
 @login_required
 def balance():
     if not _keys_ok():
-        return jsonify({"ok": False, "error": "API keys no configuradas"}), 400
+        return jsonify({"ok": False, "error": "API keys not configured"}), 400
     try:
         data = bx.get_account(*_get_keys())
         return jsonify({"ok": True, "balance": data})
@@ -125,7 +125,7 @@ def sync():
     - Retorna conteo de nuevos trades importados.
     """
     if not _keys_ok():
-        return jsonify({"ok": False, "error": "API keys no configuradas"}), 400
+        return jsonify({"ok": False, "error": "API keys not configured"}), 400
 
     data       = request.get_json(silent=True) or {}
     solo_abiertas = data.get("solo_abiertas", False)
@@ -140,7 +140,7 @@ def sync():
             abiertas = bx.get_open_positions(*_get_keys())
         except Exception as e:
             abiertas = []
-            errores.append(f"Posiciones abiertas: {e}")
+            errores.append(f"Open positions: {e}")
 
         for pos in abiertas:
             if _ya_existe(pos.get("exchange_trade_id")):
@@ -154,7 +154,7 @@ def sync():
                 cerradas = bx.get_history_positions(*_get_keys(), limit=limit_hist)
             except Exception as e:
                 cerradas = []
-                errores.append(f"Historial: {e}")
+                errores.append(f"History: {e}")
 
             for pos in cerradas:
                 if _ya_existe(pos.get("exchange_trade_id")):
@@ -168,8 +168,8 @@ def sync():
             "ok"     : True,
             "nuevos" : nuevos,
             "errores": errores,
-            "mensaje": f"{nuevos} trade(s) importados" + (
-                f". Advertencias: {len(errores)}" if errores else ""
+            "mensaje": f"{nuevos} trade(s) imported" + (
+                f". Warnings: {len(errores)}" if errores else ""
             ),
         })
 

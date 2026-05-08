@@ -106,24 +106,24 @@ def perfil_datos():
 def cambiar_password():
     """Cambia la contraseña del usuario — solo para cuentas email."""
     if current_user.google_id:
-        return jsonify({"ok": False, "error": "Los usuarios de Google no pueden cambiar contraseña aquí."}), 400
+        return jsonify({"ok": False, "error": "Google users cannot change their password here."}), 400
 
     data   = request.json or {}
     actual = data.get("actual", "")
     nueva  = data.get("nueva", "")
 
     if not actual or not nueva:
-        return jsonify({"ok": False, "error": "Campos incompletos"}), 400
+        return jsonify({"ok": False, "error": "Missing fields"}), 400
     if len(nueva) < 8:
-        return jsonify({"ok": False, "error": "La contraseña debe tener al menos 8 caracteres"}), 400
+        return jsonify({"ok": False, "error": "Password must be at least 8 characters"}), 400
     if not current_user.check_password(actual):
-        return jsonify({"ok": False, "error": "La contraseña actual es incorrecta"}), 401
+        return jsonify({"ok": False, "error": "Current password is incorrect"}), 401
 
     from utils.helpers import IS_PROD
     current_user.set_password(nueva)
     db.session.commit()
     _email_log = current_user.email[:3] + "***" if IS_PROD else current_user.email
-    logger.warning(f"Contraseña cambiada — usuario: {_email_log}")
+    logger.warning(f"Password changed — user: {_email_log}")
     return jsonify({"ok": True})
 
 
@@ -239,25 +239,25 @@ def enable_2fa():
     from flask import session
     secret = session.get("pending_totp_secret")
     if not secret:
-        return jsonify({"ok": False, "error": "Sesión de configuración expirada. Vuelve a Setup."}), 400
+        return jsonify({"ok": False, "error": "Setup session expired. Please restart setup."}), 400
 
     data = request.json or {}
     code = data.get("code", "").strip().replace(" ", "")
 
     if not code or len(code) != 6 or not code.isdigit():
-        return jsonify({"ok": False, "error": "Código debe ser 6 dígitos."}), 400
+        return jsonify({"ok": False, "error": "Code must be 6 digits."}), 400
 
     totp = pyotp.TOTP(secret)
     if not totp.verify(code, valid_window=1):
-        return jsonify({"ok": False, "error": "Código incorrecto. Verifica la hora del dispositivo."}), 401
+        return jsonify({"ok": False, "error": "Incorrect code. Verify your device clock."}), 401
 
     current_user.totp_secret     = secret
     current_user.totp_habilitado = True
     db.session.commit()
     session.pop("pending_totp_secret", None)
 
-    logger.warning(f"2FA habilitado — usuario: {current_user.id}")
-    return jsonify({"ok": True, "mensaje": "2FA activado correctamente."})
+    logger.warning(f"2FA enabled — user: {current_user.id}")
+    return jsonify({"ok": True, "mensaje": "2FA enabled successfully."})
 
 
 @profile_bp.route("/perfil/2fa/disable", methods=["POST"])
@@ -268,24 +268,24 @@ def disable_2fa():
     Requiere: {"code": "123456"}
     """
     if not current_user.totp_habilitado or not current_user.totp_secret:
-        return jsonify({"ok": False, "error": "2FA no está habilitado."}), 400
+        return jsonify({"ok": False, "error": "2FA is not enabled."}), 400
 
     data = request.json or {}
     code = data.get("code", "").strip().replace(" ", "")
 
     if not code or len(code) != 6 or not code.isdigit():
-        return jsonify({"ok": False, "error": "Código debe ser 6 dígitos."}), 400
+        return jsonify({"ok": False, "error": "Code must be 6 digits."}), 400
 
     totp = pyotp.TOTP(current_user.totp_secret)
     if not totp.verify(code, valid_window=1):
-        return jsonify({"ok": False, "error": "Código incorrecto."}), 401
+        return jsonify({"ok": False, "error": "Incorrect code."}), 401
 
     current_user.totp_secret     = None
     current_user.totp_habilitado = False
     db.session.commit()
 
-    logger.warning(f"2FA deshabilitado — usuario: {current_user.id}")
-    return jsonify({"ok": True, "mensaje": "2FA desactivado."})
+    logger.warning(f"2FA disabled — user: {current_user.id}")
+    return jsonify({"ok": True, "mensaje": "2FA disabled."})
 
 
 # ============================================================
@@ -307,7 +307,7 @@ def byok_set():
     if not current_user.es_pro():
         return jsonify({
             "ok"     : False,
-            "error"  : "BYOK es exclusivo del plan Pro.",
+            "error"  : "BYOK is exclusive to the Pro plan.",
             "upgrade": True,
         }), 403
 
@@ -315,14 +315,14 @@ def byok_set():
     api_key = data.get("api_key", "").strip()
 
     if not api_key:
-        return jsonify({"ok": False, "error": "API key vacía."}), 400
+        return jsonify({"ok": False, "error": "Empty API key."}), 400
 
-    # Validación básica de formato (sk-ant- o sk-)
+    # Basic format validation (sk-ant- or sk-)
     if not (api_key.startswith("sk-ant-") or api_key.startswith("sk-")):
-        return jsonify({"ok": False, "error": "Formato de API key inválido. Debe comenzar con sk-ant-"}), 400
+        return jsonify({"ok": False, "error": "Invalid API key format. Must start with sk-ant-"}), 400
 
     if len(api_key) < 20 or len(api_key) > 200:
-        return jsonify({"ok": False, "error": "Longitud de API key fuera de rango."}), 400
+        return jsonify({"ok": False, "error": "API key length out of range."}), 400
 
     try:
         f   = _fernet()
@@ -330,11 +330,11 @@ def byok_set():
         current_user.anthropic_key_enc = enc
         db.session.commit()
     except Exception as exc:
-        logger.error(f"Error cifrando BYOK key — usuario: {current_user.id} — {exc}")
-        return jsonify({"ok": False, "error": "Error interno al guardar la key."}), 500
+        logger.error(f"Error encrypting BYOK key — user: {current_user.id} — {exc}")
+        return jsonify({"ok": False, "error": "Internal error saving the key."}), 500
 
-    logger.warning(f"BYOK key guardada — usuario: {current_user.id}")
-    return jsonify({"ok": True, "mensaje": "API key guardada correctamente. Se usará en tus consultas."})
+    logger.warning(f"BYOK key saved — user: {current_user.id}")
+    return jsonify({"ok": True, "mensaje": "API key saved successfully. It will be used in your requests."})
 
 
 @profile_bp.route("/perfil/byok", methods=["DELETE"])
@@ -343,7 +343,7 @@ def byok_delete():
     """Elimina la BYOK key del usuario."""
     current_user.anthropic_key_enc = None
     db.session.commit()
-    return jsonify({"ok": True, "mensaje": "API key eliminada. Se usará la key del sistema."})
+    return jsonify({"ok": True, "mensaje": "API key deleted. System key will be used."})
 
 
 @profile_bp.route("/perfil/byok/status")

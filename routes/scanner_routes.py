@@ -186,7 +186,7 @@ def api_order_flow():
         from ws_monitor import get_monitor
         monitor = get_monitor()
         if monitor is None:
-            return jsonify({"ok": False, "error": "WS monitor no iniciado"}), 503
+            return jsonify({"ok": False, "error": "WS monitor not started"}), 503
 
         flow = monitor.get_order_flow("BTC/USDT")
         # Considerar "activo" si recibimos trades en los últimos 30s

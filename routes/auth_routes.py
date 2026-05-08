@@ -48,21 +48,21 @@ def login_post():
     password = data.get("password", "")
 
     if not email or not password:
-        return jsonify({"ok": False, "error": "Email y contraseña requeridos"}), 400
+        return jsonify({"ok": False, "error": "Email and password required"}), 400
 
     if check_brute_force(ip):
-        logger.warning(f"Fuerza bruta bloqueada — IP: {ip}")
-        return jsonify({"ok": False, "error": "Demasiados intentos fallidos. Espera 5 minutos."}), 429
+        logger.warning(f"Brute force blocked — IP: {ip}")
+        return jsonify({"ok": False, "error": "Too many failed attempts. Wait 5 minutes."}), 429
 
     usuario = Usuario.query.filter_by(email=email).first()
     if not usuario or not usuario.check_password(password):
         register_failed_login(ip)
         _email_log = email[:3] + "***" if IS_PROD else email
-        logger.warning(f"Login fallido — IP: {ip} — email: {_email_log}")
-        return jsonify({"ok": False, "error": "Credenciales incorrectas"}), 401
+        logger.warning(f"Login failed — IP: {ip} — email: {_email_log}")
+        return jsonify({"ok": False, "error": "Invalid credentials"}), 401
 
     if not usuario.activo:
-        return jsonify({"ok": False, "error": "Cuenta desactivada"}), 403
+        return jsonify({"ok": False, "error": "Account disabled"}), 403
 
     clear_failed_logins(ip)
 
@@ -82,7 +82,7 @@ def register():
     """Registro con email y password."""
     ip = get_client_ip()
     if not check_rate_limit(ip):
-        return jsonify({"ok": False, "error": "Demasiadas solicitudes. Espera un momento."}), 429
+        return jsonify({"ok": False, "error": "Too many requests. Wait a moment."}), 429
 
     data     = request.json or {}
     email    = data.get("email", "").strip().lower()
@@ -90,19 +90,19 @@ def register():
     password = data.get("password", "")
 
     if not email or not password or not nombre:
-        return jsonify({"ok": False, "error": "Todos los campos son requeridos"}), 400
+        return jsonify({"ok": False, "error": "All fields are required"}), 400
 
     if not is_valid_email(email):
-        return jsonify({"ok": False, "error": "El email no tiene un formato válido"}), 400
+        return jsonify({"ok": False, "error": "Invalid email format"}), 400
 
     if len(password) < 8:
-        return jsonify({"ok": False, "error": "La contraseña debe tener al menos 8 caracteres"}), 400
+        return jsonify({"ok": False, "error": "Password must be at least 8 characters"}), 400
 
     if len(nombre) < 2 or len(nombre) > 50:
-        return jsonify({"ok": False, "error": "El nombre debe tener entre 2 y 50 caracteres"}), 400
+        return jsonify({"ok": False, "error": "Name must be between 2 and 50 characters"}), 400
 
     if Usuario.query.filter_by(email=email).first():
-        return jsonify({"ok": False, "error": "Este email ya está registrado"}), 409
+        return jsonify({"ok": False, "error": "This email is already registered"}), 409
 
     usuario = Usuario(email=email, nombre=nombre)
     usuario.set_password(password)
@@ -123,23 +123,23 @@ def login_verify_2fa():
     """
     uid = session.get("pending_2fa_uid")
     if not uid:
-        return jsonify({"ok": False, "error": "Sesión de 2FA expirada. Vuelve a iniciar sesión."}), 400
+        return jsonify({"ok": False, "error": "2FA session expired. Please log in again."}), 400
 
     data = request.json or {}
     code = data.get("code", "").strip().replace(" ", "")
 
     if not code or len(code) != 6 or not code.isdigit():
-        return jsonify({"ok": False, "error": "Código inválido — debe ser 6 dígitos."}), 400
+        return jsonify({"ok": False, "error": "Invalid code — must be 6 digits."}), 400
 
     usuario = db.session.get(Usuario, uid)
     if not usuario or not usuario.totp_secret:
         session.pop("pending_2fa_uid", None)
-        return jsonify({"ok": False, "error": "Error de sesión. Vuelve a iniciar sesión."}), 400
+        return jsonify({"ok": False, "error": "Session error. Please log in again."}), 400
 
     totp = pyotp.TOTP(usuario.totp_secret)
-    if not totp.verify(code, valid_window=1):   # ±30 seg de tolerancia
-        logger.warning(f"2FA fallido — usuario: {usuario.id}")
-        return jsonify({"ok": False, "error": "Código incorrecto o expirado."}), 401
+    if not totp.verify(code, valid_window=1):   # ±30 sec tolerance
+        logger.warning(f"2FA failed — user: {usuario.id}")
+        return jsonify({"ok": False, "error": "Incorrect or expired code."}), 401
 
     session.pop("pending_2fa_uid", None)
     login_user(usuario, remember=True)
