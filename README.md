@@ -4,6 +4,8 @@
 
 **Institutional-grade market analysis, trade journaling, and AI mentorship in one open-source platform.**
 
+> ⚠️ **Live demo temporarily unavailable.** The hosted version requires a server outside the US to access Binance market data (Binance blocks AWS/US IPs). Working on a fix. In the meantime, clone and run locally — it works perfectly.
+
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square&logo=python)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-3.x-black?style=flat-square&logo=flask)](https://flask.palletsprojects.com)
 [![Claude API](https://img.shields.io/badge/Anthropic-Claude%203.5-orange?style=flat-square)](https://anthropic.com)
