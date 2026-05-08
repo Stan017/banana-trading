@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
   <link rel="icon" type="image/png" href="/static/bananaTradeLogo2.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Journal de Trading — Banana</title>
+<title>Trading Journal — Banana</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
@@ -1042,7 +1042,7 @@
 
   <!-- STATS RÁPIDAS -->
   <div class="sb-block">
-    <div class="sb-block-label">Estadísticas globales</div>
+    <div class="sb-block-label">Global statistics</div>
     <div style="display:flex;flex-direction:column;gap:6px" id="sb-stats">
       <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--text2)">
         <span>Total trades</span>
@@ -1053,7 +1053,7 @@
         <span class="sb-stat-wr" style="font-family:var(--mono);font-weight:600;color:var(--green)">—</span>
       </div>
       <div style="display:flex;justify-content:space-between;font-size:12.5px;color:var(--text2)">
-        <span>R:R promedio</span>
+        <span>Avg. R:R</span>
         <span class="sb-stat-rr" style="font-family:var(--mono);font-weight:600;color:var(--text)">—</span>
       </div>
     </div>
@@ -1111,23 +1111,23 @@
       <div class="header-right">
         <!-- Bell notifications -->
         <div class="bell-wrap" id="bell-wrap">
-          <button class="bell-btn" id="bell-btn" type="button" title="Notificaciones">
+          <button class="bell-btn" id="bell-btn" type="button" title="Notifications">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             <span class="bell-badge" id="bell-badge" style="display:none">0</span>
           </button>
           <div class="bell-dropdown" id="bell-dropdown" style="display:none">
             <div class="bell-header">
-              <span>Notificaciones</span>
-              <button class="bell-leer-todas" id="bell-leer-todas" type="button">Leer todas</button>
+              <span>Notifications</span>
+              <button class="bell-leer-todas" id="bell-leer-todas" type="button">Mark all read</button>
             </div>
             <div class="bell-list" id="bell-list">
-              <p class="bell-empty">Sin notificaciones</p>
+              <p class="bell-empty">No notifications</p>
             </div>
           </div>
         </div>
         <div class="status-pill" id="status-pill">
           <span class="status-dot"></span>
-          <span>En línea</span>
+          <span>Online</span>
         </div>
         <div class="user-chip" id="user-chip" style="display:none">
           <button class="user-chip-btn" id="user-chip-btn" type="button">
@@ -1140,7 +1140,7 @@
             <div class="dd-user-info">
               <img class="dd-avatar" id="dd-avatar" src="" alt="">
               <div class="dd-user-text">
-                <span class="dd-user-name" id="dd-user-name">Usuario</span>
+                <span class="dd-user-name" id="dd-user-name">User</span>
                 <span class="dd-plan-badge" id="dd-plan-badge">Free</span>
               </div>
             </div>
@@ -1150,7 +1150,7 @@
                 <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                 <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
               </span>
-              <span id="dd-theme-label">Modo claro</span>
+              <span id="dd-theme-label">Light mode</span>
             </button>
             <button class="dd-item" id="dd-lang-btn" type="button">
               <span class="dd-icon">
@@ -1161,12 +1161,12 @@
             <div class="dd-sep"></div>
             <a href="/perfil" class="dd-item">
               <span class="dd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-              Mi Perfil
+              My Profile
             </a>
             <div class="dd-sep"></div>
             <a href="/logout" class="dd-item dd-logout-item">
               <span class="dd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
-              Cerrar sesión
+              Sign out
             </a>
           </div>
         </div>
@@ -1176,7 +1176,7 @@
     <!-- PAGE TITLE -->
     <div style="display:flex;align-items:baseline;gap:12px;padding:20px 0 16px">
       <div style="font-size:18px;font-weight:700;color:var(--text);letter-spacing:0.5px">TRADE <span style="color:var(--blue)">HISTORY</span></div>
-      <div style="font-size:12px;color:var(--text3)">Registro personal de operaciones</div>
+      <div style="font-size:12px;color:var(--text3)">Personal trade log</div>
     </div>
 
     <!-- STATS RÁPIDAS TOP -->
@@ -1190,7 +1190,7 @@
         <div class="stat-value win" id="st-wr">—</div>
       </div>
       <div class="stat-pill">
-        <div class="stat-label">R:R promedio</div>
+        <div class="stat-label">Avg. R:R</div>
         <div class="stat-value" id="st-rr">—</div>
       </div>
     </div>
@@ -1208,13 +1208,13 @@
             <div class="j-card-title-icon">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             </div>
-            Registrar nuevo trade
+            New trade
           </div>
 
           <!-- Activo + Timeframe -->
           <div class="j-input-row">
             <div class="j-field">
-              <label class="j-label">Activo</label>
+              <label class="j-label">Asset</label>
               <input class="j-input" id="f-activo" type="text" placeholder="BTC/USDT" autocomplete="off" oninput="this.value=this.value.toUpperCase()">
             </div>
             <div class="j-field">
@@ -1232,7 +1232,7 @@
 
           <!-- Dirección -->
           <div class="j-field">
-            <label class="j-label">Dirección</label>
+            <label class="j-label">Direction</label>
             <div class="dir-selector">
               <button class="dir-btn" id="btn-long" onclick="setDir('LONG')">
                 ▲ LONG
@@ -1246,7 +1246,7 @@
           <!-- Precios -->
           <div class="j-input-row-3">
             <div class="j-field" style="margin:0">
-              <label class="j-label">Entrada</label>
+              <label class="j-label">Entry</label>
               <input class="j-input" id="f-entrada" type="number" placeholder="0.00" step="any" oninput="calcRR()">
             </div>
             <div class="j-field" style="margin:0">
@@ -1261,25 +1261,25 @@
 
           <!-- R:R calculado -->
           <div class="j-field">
-            <label class="j-label">R:R Planeado</label>
+            <label class="j-label">Planned R:R</label>
             <div class="rr-display" id="rr-display">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <span id="rr-val">Ingresa entrada, SL y TP para calcular</span>
+              <span id="rr-val">Enter entry, SL and TP to calculate</span>
             </div>
           </div>
 
           <!-- Estado del trade -->
           <div class="j-field">
-            <label class="j-label">Estado</label>
+            <label class="j-label">Status</label>
             <div class="estado-toggle">
-              <button class="estado-btn active-abierto" id="btn-abierto" onclick="setEstado('ABIERTO')">🟢 Abierto</button>
-              <button class="estado-btn" id="btn-cerrado" onclick="setEstado('CERRADO')">🔒 Cerrado</button>
+              <button class="estado-btn active-abierto" id="btn-abierto" onclick="setEstado('ABIERTO')">🟢 Open</button>
+              <button class="estado-btn" id="btn-cerrado" onclick="setEstado('CERRADO')">🔒 Closed</button>
             </div>
           </div>
 
           <!-- Resultado (solo visible si CERRADO) -->
           <div class="j-field" id="resultado-field">
-            <label class="j-label">Resultado</label>
+            <label class="j-label">Result</label>
             <div class="result-selector">
               <button class="result-btn" id="btn-win"  onclick="setResult('WIN')">✅ WIN</button>
               <button class="result-btn" id="btn-loss" onclick="setResult('LOSS')">❌ LOSS</button>
@@ -1289,14 +1289,14 @@
 
           <!-- PnL (solo visible si CERRADO) -->
           <div class="j-field" id="pnl-field">
-            <label class="j-label">PnL en cuenta (%)</label>
+            <label class="j-label">Account PnL (%)</label>
             <input class="j-input" id="f-pnl" type="number" placeholder="+38.0  o  -5.0" step="any">
           </div>
 
           <!-- Toggle avanzado -->
           <button class="j-advanced-toggle" id="btn-advanced" type="button" onclick="toggleAdvanced()">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-            Opciones avanzadas
+            Advanced options
             <svg class="adv-chevron" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
           </button>
 
@@ -1304,7 +1304,7 @@
 
             <!-- Tipo de trade -->
             <div class="j-field" style="margin-top:10px">
-              <label class="j-label">Tipo de trade</label>
+              <label class="j-label">Trade type</label>
               <div style="display:flex;gap:8px">
                 <button class="estado-btn" id="btn-scalp"    onclick="setTipoTrade('SCALP')">⚡ Scalp</button>
                 <button class="estado-btn active-abierto" id="btn-swing" onclick="setTipoTrade('SWING')">📈 Swing</button>
@@ -1314,7 +1314,7 @@
 
             <!-- Apalancamiento + Tipo margen -->
             <div class="j-field" id="leverage-field">
-              <label class="j-label">Apalancamiento & Margen</label>
+              <label class="j-label">Leverage & Margin</label>
               <div style="display:flex;gap:8px;margin-bottom:6px">
                 <select class="j-input" id="f-leverage" style="flex:1">
                   <option value="1">1x — Spot</option>
@@ -1328,36 +1328,36 @@
                   <option value="100">100x</option>
                 </select>
                 <select class="j-input" id="f-tipo-margen" style="flex:1">
-                  <option value="AISLADO">Aislado</option>
-                  <option value="CRUZADO">Cruzado</option>
+                  <option value="AISLADO">Isolated</option>
+                  <option value="CRUZADO">Cross</option>
                 </select>
               </div>
               <div style="display:flex;gap:8px;margin-bottom:6px">
-                <input class="j-input" id="f-precio-cierre" type="number" placeholder="Precio cierre (opc.)" step="any" style="flex:1">
-                <input class="j-input" id="f-margen" type="number" placeholder="Margen USDT (opc.)" step="any" style="flex:1">
+                <input class="j-input" id="f-precio-cierre" type="number" placeholder="Close price (opt.)" step="any" style="flex:1">
+                <input class="j-input" id="f-margen" type="number" placeholder="Margin USDT (opt.)" step="any" style="flex:1">
               </div>
-              <input class="j-input" id="f-capital" type="number" placeholder="Capital total cuenta USDT (opc.)" step="any">
-              <small style="color:var(--text3);font-size:10px;margin-top:4px;display:block">💡 Margen + capital → la IA calcula liquidación, riesgo % cuenta y exposición real.</small>
+              <input class="j-input" id="f-capital" type="number" placeholder="Total account capital USDT (opt.)" step="any">
+              <small style="color:var(--text3);font-size:10px;margin-top:4px;display:block">💡 Margin + capital → AI calculates liquidation, account risk % and real exposure.</small>
             </div>
 
             <!-- Notas -->
             <div class="j-field">
-              <label class="j-label">Notas</label>
-              <textarea class="j-input" id="f-notas" rows="3" placeholder="Confluencias, por qué entraste, errores..." style="resize:none;line-height:1.5"></textarea>
+              <label class="j-label">Notes</label>
+              <textarea class="j-input" id="f-notas" rows="3" placeholder="Confluences, why you entered, mistakes..." style="resize:none;line-height:1.5"></textarea>
             </div>
 
           </div><!-- /j-advanced-wrap -->
 
           <button class="j-submit" id="btn-submit" onclick="registrarTrade()" style="margin-top:12px">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span id="btn-submit-label">Abrir trade</span>
+            <span id="btn-submit-label">Open trade</span>
           </button>
 
           <!-- CSV Import -->
           <div class="csv-import-area" onclick="document.getElementById('csv-file-input').click()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Importar CSV de exchange
-            <p>Bitunix · Binance · Bybit · Genérico</p>
+            Import exchange CSV
+            <p>Bitunix · Binance · Bybit · Generic</p>
           </div>
           <input type="file" id="csv-file-input" accept=".csv" style="display:none" onchange="importarCSV(this)">
 
@@ -1373,10 +1373,10 @@
         <!-- Tabs -->
         <div class="j-tabs">
           <button class="j-tab active" id="tab-historial" onclick="setTab('historial')">
-            📋 Historial
+            📋 History
           </button>
           <button class="j-tab" id="tab-ia" onclick="setTab('ia')">
-            🧠 Análisis IA Pro
+            🧠 AI Pro Analysis
           </button>
         </div>
 
@@ -1384,16 +1384,16 @@
         <div class="tab-content active" id="tc-historial">
           <!-- Sync bar -->
           <div class="sync-bar" id="sync-bar">
-            <button class="sync-btn" id="btn-sync-bitunix" onclick="syncBitunix()" title="Importar trades de Bitunix">
+            <button class="sync-btn" id="btn-sync-bitunix" onclick="syncBitunix()" title="Import Bitunix trades">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-              Sincronizar Bitunix
+              Sync Bitunix
             </button>
             <span class="sync-status" id="sync-status"></span>
           </div>
           <div class="trades-list" id="trades-list">
             <div class="empty-state">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              <p>Aún no hay trades registrados.<br>Registra tu primer trade para empezar.</p>
+              <p>No trades registered yet.<br>Register your first trade to get started.</p>
             </div>
           </div>
         </div>
@@ -1409,11 +1409,11 @@
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93A10 10 0 0 0 5 19"/><path d="M4.93 19.07A10 10 0 0 0 19 5"/></svg>
                 </div>
                 <div class="ia-cta-pro-badge">Pro Exclusive</div>
-                <h3>Análisis de Patrones</h3>
-                <p>Claude analiza tus trades con metodología institucional e identifica exactamente qué estás haciendo mal.</p>
+                <h3>Pattern Analysis</h3>
+                <p>Claude analyzes your trades with institutional methodology and identifies exactly what you're doing wrong.</p>
                 <button class="ia-analyze-btn" id="btn-analizar" onclick="analisisProfundo()">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-                  Analizar mis trades
+                  Analyze my trades
                 </button>
               </div>
 
@@ -1433,13 +1433,13 @@
 <!-- Modal: Cerrar trade -->
 <div class="cerrar-modal-overlay" id="cerrar-modal-overlay">
   <div class="cerrar-modal">
-    <h3>Cerrar trade</h3>
+    <h3>Close trade</h3>
     <div class="j-field" style="margin:0">
-      <label class="j-label">Precio de cierre</label>
+      <label class="j-label">Close price</label>
       <input class="j-input" id="modal-precio-cierre" type="number" placeholder="0.00" step="any">
     </div>
     <div class="j-field" style="margin:0">
-      <label class="j-label">Resultado</label>
+      <label class="j-label">Result</label>
       <div class="result-selector">
         <button class="result-btn" id="modal-btn-win"  onclick="setModalResult('WIN')">✅ WIN</button>
         <button class="result-btn" id="modal-btn-loss" onclick="setModalResult('LOSS')">❌ LOSS</button>
@@ -1447,8 +1447,8 @@
       </div>
     </div>
     <div class="cerrar-modal-btns">
-      <button class="btn-confirmar-cierre" onclick="confirmarCierre()">Confirmar cierre</button>
-      <button class="btn-cancelar-cierre" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn-confirmar-cierre" onclick="confirmarCierre()">Confirm close</button>
+      <button class="btn-cancelar-cierre" onclick="cerrarModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -1528,7 +1528,7 @@ function cargarUsuario() {
           const btn = document.getElementById("btn-analizar");
           if (btn) {
             btn.disabled = true;
-            btn.innerHTML = `<span>🔒</span> Solo plan Pro`;
+            btn.innerHTML = `<span>🔒</span> Pro plan only`;
           }
         }
       }
@@ -1554,7 +1554,7 @@ function setEstado(e) {
   document.getElementById("resultado-field").style.display = showClosed ? "" : "none";
   document.getElementById("pnl-field").style.display       = showClosed ? "" : "none";
   const lbl = document.getElementById("btn-submit-label");
-  if (lbl) lbl.textContent = showClosed ? "Registrar trade" : "Abrir trade";
+  if (lbl) lbl.textContent = showClosed ? "Register trade" : "Open trade";
   if (!showClosed) { resultado = ""; document.querySelectorAll(".result-btn").forEach(b => b.className = "result-btn"); }
 }
 
@@ -1598,7 +1598,7 @@ function calcRR() {
 
   if (!entrada || !sl || !tp || !direccion) {
     el.className = "rr-display";
-    vl.textContent = "Ingresa entrada, SL y TP para calcular";
+    vl.textContent = "Enter entry, SL and TP to calculate";
     return;
   }
 
@@ -1613,7 +1613,7 @@ function calcRR() {
 
   if (riesgo <= 0 || recompensa <= 0) {
     el.className = "rr-display rr-bad";
-    vl.textContent = "⚠️ Precios inválidos para " + direccion;
+    vl.textContent = "⚠️ Invalid prices for " + direccion;
     return;
   }
 
@@ -1621,7 +1621,7 @@ function calcRR() {
   const riskPct = (Math.abs(entrada - sl) / entrada * 100).toFixed(2);
   const ok = parseFloat(rr) >= 1;
   el.className = "rr-display " + (ok ? "rr-ok" : "rr-bad");
-  vl.textContent = `${rr}:1 R:R — Riesgo: ${riskPct}%`;
+  vl.textContent = `${rr}:1 R:R — Risk: ${riskPct}%`;
 }
 
 // ═══════════════════════════════════════════════════
@@ -1637,17 +1637,17 @@ async function registrarTrade() {
   const tf      = document.getElementById("f-tf").value;
 
   if (!activo || !entrada || !direccion) {
-    showToast("Activo, entrada y dirección son obligatorios", "error");
+    showToast("Asset, entry and direction are required", "error");
     return;
   }
   // Si es CERRADO, resultado es obligatorio
   if (estado === "CERRADO" && !resultado) {
-    showToast("Selecciona el resultado del trade (WIN / LOSS / BE)", "error");
+    showToast("Select trade result (WIN / LOSS / BE)", "error");
     return;
   }
   // Warning PnL — solo aplica a trades cerrados WIN o LOSS
   if (estado === "CERRADO" && (resultado === "WIN" || resultado === "LOSS") && !pnl) {
-    showToast("⚠️ Sin PnL no puedes analizar tu rentabilidad real. Agrégalo para un análisis completo.", "warning");
+    showToast("⚠️ Without PnL you can't analyze your real profitability. Add it for a complete analysis.", "warning");
     document.getElementById("f-pnl").focus();
     document.getElementById("f-pnl").style.borderColor = "var(--yellow)";
     setTimeout(() => { document.getElementById("f-pnl").style.borderColor = ""; }, 3000);
@@ -1656,7 +1656,7 @@ async function registrarTrade() {
 
   const btn = document.getElementById("btn-submit");
   btn.disabled = true;
-  const loadLabel = estado === "ABIERTO" ? "Registrando..." : "Analizando...";
+  const loadLabel = estado === "ABIERTO" ? "Registering..." : "Analyzing...";
   btn.innerHTML = `<div class="loading-dots"><span></span><span></span><span></span></div> ${loadLabel}`;
 
 
@@ -1683,10 +1683,10 @@ async function registrarTrade() {
     });
 
     const data = await res.json();
-    if (!data.ok) throw new Error(data.error || "Error desconocido");
+    if (!data.ok) throw new Error(data.error || "Unknown error");
 
 
-    const msg = estado === "ABIERTO" ? "🟢 Trade abierto registrado" : "✅ Trade registrado";
+    const msg = estado === "ABIERTO" ? "🟢 Open trade registered" : "✅ Trade registered";
     showToast(msg, "success");
     limpiarFormulario();
     cargarTrades();
@@ -1696,7 +1696,7 @@ async function registrarTrade() {
   } finally {
     btn.disabled = false;
     const lbl = document.getElementById("btn-submit-label");
-    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span id="btn-submit-label">${estado === "ABIERTO" ? "Abrir trade" : "Registrar trade"}</span>`;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> <span id="btn-submit-label">${estado === "ABIERTO" ? "Open trade" : "Register trade"}</span>`;
   }
 }
 
@@ -1758,7 +1758,7 @@ function renderTrades() {
     list.innerHTML = `
       <div class="empty-state">
         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <p>Aún no hay trades registrados.<br>Registra tu primer trade para empezar.</p>
+        <p>No trades registered yet.<br>Register your first trade to get started.</p>
       </div>`;
     return;
   }
@@ -1770,7 +1770,7 @@ function renderTrades() {
     const isOpen    = t.estado === "ABIERTO";
     const cardClass = isOpen ? "open-card" : t.resultado === "WIN" ? "win-card" : t.resultado === "LOSS" ? "loss-card" : t.resultado === "BE" ? "be-card" : "";
     const resClass  = isOpen ? "pending" : t.resultado === "WIN" ? "win" : t.resultado === "LOSS" ? "loss" : t.resultado === "BE" ? "be" : "pending";
-    const resLabel  = isOpen ? "🟢 ABIERTO" : (t.resultado || "—");
+    const resLabel  = isOpen ? "🟢 OPEN" : (t.resultado || "—");
     const dirClass  = t.direccion === "LONG" ? "long" : "short";
     const pnlClass  = t.pnl > 0 ? "pos" : t.pnl < 0 ? "neg" : "";
     const pnlStr    = t.pnl != null ? (t.pnl > 0 ? "+" : "") + t.pnl.toFixed(2) + "%" : "—";
@@ -1779,11 +1779,11 @@ function renderTrades() {
     let confBadge = "";
     if (isOpen && t.confianza_bot != null) {
       const confClass = t.confianza_bot >= 66 ? "high" : t.confianza_bot >= 40 ? "mid" : "low";
-      confBadge = `<span class="confianza-badge ${confClass}" title="Convicción de la IA al momento de entrada"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline;vertical-align:middle;margin-right:2px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>${t.confianza_bot}%</span>`;
+      confBadge = `<span class="confianza-badge ${confClass}" title="AI conviction at time of entry"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:inline;vertical-align:middle;margin-right:2px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>${t.confianza_bot}%</span>`;
     }
 
     // Botón cerrar (solo trades abiertos)
-    const cerrarBtn = isOpen ? `<button class="cerrar-trade-btn" onclick="abrirModalCierre(${t.id})">Cerrar trade →</button>` : "";
+    const cerrarBtn = isOpen ? `<button class="cerrar-trade-btn" onclick="abrirModalCierre(${t.id})">Close trade →</button>` : "";
 
     // Meta row: entrada → cierre | leverage | TF | RR | estilo
     const entradaFmt = t.entrada && t.entrada > 0 ? `$${Number(t.entrada).toLocaleString()}` : null;
@@ -1806,7 +1806,7 @@ function renderTrades() {
 
     return `
     <div class="trade-card ${cardClass}" id="tc-${t.id}">
-      <button class="trade-delete-btn" onclick="borrarTrade(${t.id})" title="Eliminar trade">
+      <button class="trade-delete-btn" onclick="borrarTrade(${t.id})" title="Delete trade">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
 
@@ -1823,7 +1823,7 @@ function renderTrades() {
       <!-- Hero: PnL -->
       ${t.pnl != null
         ? `<div class="trade-pnl-hero ${pnlClass}">${pnlStr}</div>`
-        : `<div style="font-size:11px;color:var(--text3);margin:4px 0 8px;font-style:italic">Sin PnL</div>`
+        : `<div style="font-size:11px;color:var(--text3);margin:4px 0 8px;font-style:italic">No PnL</div>`
       }
 
       <!-- Meta row compacta -->
@@ -1848,12 +1848,12 @@ function renderTrades() {
   const loadMoreHtml = restantes > 0 ? `
     <div class="load-more-wrap">
       <button class="load-more-btn" onclick="mostrarMas()">
-        Mostrar ${Math.min(restantes, PAGE_SIZE)} más
+        Show ${Math.min(restantes, PAGE_SIZE)} more
       </button>
-      <span class="load-more-count">${tradesVisible} de ${trades.length} trades</span>
+      <span class="load-more-count">${tradesVisible} of ${trades.length} trades</span>
     </div>` : `
     <div class="load-more-wrap">
-      <span class="load-more-count">Todos los trades · ${trades.length} total</span>
+      <span class="load-more-count">All trades · ${trades.length} total</span>
     </div>`;
 
   list.innerHTML = cardsHtml + loadMoreHtml;
@@ -1872,17 +1872,17 @@ function mostrarMas() {
 // BORRAR TRADE
 // ═══════════════════════════════════════════════════
 async function borrarTrade(id) {
-  if (!confirm("¿Eliminar este trade?")) return;
+  if (!confirm("Delete this trade?")) return;
   try {
     const res = await fetch(`/journal/trade/${id}`, { method: "DELETE" });
     const data = await res.json();
     if (data.ok) {
       document.getElementById(`tc-${id}`)?.remove();
-      showToast("Trade eliminado", "success");
+      showToast("Trade deleted", "success");
       cargarTrades();
     }
   } catch {
-    showToast("Error al eliminar", "error");
+    showToast("Error deleting trade", "error");
   }
 }
 
@@ -1900,13 +1900,13 @@ async function syncBitunix() {
     statusData = await r.json();
   } catch {
     status.className = "sync-status err";
-    status.textContent = "Error de red";
+    status.textContent = "Network error";
     return;
   }
 
   if (!statusData.configurado) {
     // Redirigir a perfil para configurar claves
-    showToast("Configura tus API keys de Bitunix en tu perfil primero", "error");
+    showToast("Set up your Bitunix API keys in your profile first", "error");
     setTimeout(() => { window.location.href = "/perfil#bitunix"; }, 1500);
     return;
   }
@@ -1914,7 +1914,7 @@ async function syncBitunix() {
   btn.disabled = true;
   btn.classList.add("syncing");
   status.className = "sync-status";
-  status.textContent = "Sincronizando…";
+  status.textContent = "Syncing…";
 
   try {
     const res  = await fetch("/api/bitunix/sync", {
@@ -1933,13 +1933,13 @@ async function syncBitunix() {
       }
     } else {
       status.className = "sync-status err";
-      status.textContent = data.error || "Error al sincronizar";
-      showToast(data.error || "Error al sincronizar", "error");
+      status.textContent = data.error || "Sync error";
+      showToast(data.error || "Sync error", "error");
     }
   } catch {
     status.className = "sync-status err";
-    status.textContent = "Error de red";
-    showToast("Error de red al sincronizar", "error");
+    status.textContent = "Network error";
+    showToast("Network error while syncing", "error");
   } finally {
     btn.disabled = false;
     btn.classList.remove("syncing");
@@ -1956,7 +1956,7 @@ async function analisisProfundo() {
   const cta    = document.getElementById("ia-cta");
 
   btn.disabled = true;
-  btn.innerHTML = `<div class="loading-dots"><span></span><span></span><span></span></div> Analizando...`;
+  btn.innerHTML = `<div class="loading-dots"><span></span><span></span><span></span></div> Analyzing...`;
 
   try {
     const res  = await fetch("/journal/analisis-profundo", {
@@ -1968,7 +1968,7 @@ async function analisisProfundo() {
 
     if (!data.ok) {
       if (data.upgrade) {
-        showToast("Función exclusiva del plan Pro 🔒", "error");
+        showToast("Pro plan exclusive feature 🔒", "error");
       } else {
         showToast(data.error || "Error en el análisis", "error");
       }
@@ -1980,10 +1980,10 @@ async function analisisProfundo() {
     cta.style.display = "none";
 
   } catch {
-    showToast("Error de conexión", "error");
+    showToast("Connection error", "error");
   } finally {
     btn.disabled = false;
-    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Analizar de nuevo`;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Analyze again`;
   }
 }
 
@@ -2005,8 +2005,8 @@ function cerrarModal() {
 
 async function confirmarCierre() {
   const precio = document.getElementById("modal-precio-cierre").value;
-  if (!precio) { showToast("Ingresa el precio de cierre", "error"); return; }
-  if (!modalResultado) { showToast("Selecciona el resultado", "error"); return; }
+  if (!precio) { showToast("Enter close price", "error"); return; }
+  if (!modalResultado) { showToast("Select result", "error"); return; }
 
   try {
     const res = await fetch(`/journal/trade/${modalTradeId}/cerrar`, {
@@ -2016,7 +2016,7 @@ async function confirmarCierre() {
     });
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || "Error al cerrar");
-    showToast("🔒 Trade cerrado", "success");
+    showToast("🔒 Trade closed", "success");
     cerrarModal();
     cargarTrades();
   } catch (err) {
@@ -2035,13 +2035,13 @@ async function importarCSV(input) {
   formData.append("file", file);
   input.value = "";   // reset para poder re-subir el mismo archivo
 
-  showToast("Importando CSV...", "success");
+  showToast("Importing CSV...", "success");
 
   try {
     const res  = await fetch("/journal/importar-csv", { method: "POST", body: formData });
     const data = await res.json();
     if (!data.ok) throw new Error(data.error || "Error al importar");
-    showToast(`✅ ${data.importados} trades importados (${data.duplicados} duplicados omitidos)`, "success");
+    showToast(`✅ ${data.importados} trades imported (${data.duplicados} duplicates skipped)`, "success");
     cargarTrades();
   } catch (err) {
     showToast("Error: " + err.message, "error");
@@ -2069,7 +2069,7 @@ function limpiarFormulario() {
   document.querySelectorAll(".dir-btn").forEach(b => b.className = "dir-btn");
   document.querySelectorAll(".result-btn").forEach(b => b.className = "result-btn");
   document.getElementById("rr-display").className = "rr-display";
-  document.getElementById("rr-val").textContent = "Ingresa entrada, SL y TP para calcular";
+  document.getElementById("rr-val").textContent = "Enter entry, SL and TP to calculate";
   setEstado("ABIERTO");
   setTipoTrade("SWING");
 }
@@ -2110,7 +2110,7 @@ function showToast(msg, type = "success") {
 
     const notifs = data.notificaciones || [];
     if (notifs.length === 0) {
-      bellList.innerHTML = '<p class="bell-empty">Sin notificaciones</p>';
+      bellList.innerHTML = '<p class="bell-empty">No notifications</p>';
       return;
     }
     const TIPOS_TRADE = ["liquidacion", "sl"];
@@ -2120,8 +2120,8 @@ function showToast(msg, type = "success") {
            data-id="${n.id}" data-trade-id="${n.trade_id || ""}" data-tipo="${n.tipo}">
         <div class="bell-item-title">${sanitize(n.titulo)}</div>
         <div class="bell-item-msg">${sanitize(n.mensaje)}</div>
-        <div class="bell-item-time">${n.creada_en}${esTradeNotif ? ' · <span class="bell-ver-trade">Ver trade →</span>' : ""}</div>
-        <button class="bell-delete-btn" data-del-id="${n.id}" title="Eliminar">✕</button>
+        <div class="bell-item-time">${n.creada_en}${esTradeNotif ? ' · <span class="bell-ver-trade">View trade →</span>' : ""}</div>
+        <button class="bell-delete-btn" data-del-id="${n.id}" title="Delete">✕</button>
       </div>`;
     }).join("");
 

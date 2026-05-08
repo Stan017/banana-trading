@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="/static/bananaTradeLogo2.png">
@@ -484,7 +484,7 @@
       <div class="header-right">
         <div class="status-pill" id="status-pill">
           <span class="status-dot"></span>
-          <span>En línea</span>
+          <span>Online</span>
         </div>
         <div class="user-chip" id="user-chip" style="display:none">
           <button class="user-chip-btn" id="user-chip-btn" type="button">
@@ -497,7 +497,7 @@
             <div class="dd-user-info">
               <img class="dd-avatar" id="dd-avatar" src="" alt="">
               <div class="dd-user-text">
-                <span class="dd-user-name" id="dd-user-name">Usuario</span>
+                <span class="dd-user-name" id="dd-user-name">User</span>
                 <span class="dd-plan-badge" id="dd-plan-badge">Free</span>
               </div>
             </div>
@@ -507,17 +507,17 @@
                 <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                 <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/></svg>
               </span>
-              <span id="dd-theme-label">Modo claro</span>
+              <span id="dd-theme-label">Light mode</span>
             </button>
             <div class="dd-sep"></div>
             <a href="/perfil" class="dd-item">
               <span class="dd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
-              Mi Perfil
+              My Profile
             </a>
             <div class="dd-sep"></div>
             <a href="/logout" class="dd-item dd-logout-item">
               <span class="dd-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
-              Cerrar sesión
+              Sign out
             </a>
           </div>
         </div>
@@ -527,7 +527,7 @@
     <!-- TÍTULO -->
     <div class="liq-title-row">
       <div class="liq-title">Liquidity <span>Map</span></div>
-      <div class="liq-subtitle">L2 Order Book · Zonas de Liquidación · Heatmap</div>
+      <div class="liq-subtitle">L2 Order Book · Liquidation Zones · Heatmap</div>
       <button class="liq-refresh-btn" onclick="refreshAll()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
         Refresh
@@ -545,18 +545,18 @@
           <span class="liq-card-badge live" id="l2-badge">live</span>
         </div>
         <div id="l2-content">
-          <div style="color:var(--text3);font-size:12px">Cargando...</div>
+          <div style="color:var(--text3);font-size:12px">Loading...</div>
         </div>
       </div>
 
       <!-- ZONAS DE LIQUIDACIÓN -->
       <div class="liq-card">
         <div class="liq-card-title">
-          Zonas de Liquidación
-          <span class="liq-card-badge">estimadas</span>
+          Liquidation Zones
+          <span class="liq-card-badge">estimated</span>
         </div>
         <div id="zones-content">
-          <div style="color:var(--text3);font-size:12px">Cargando...</div>
+          <div style="color:var(--text3);font-size:12px">Loading...</div>
         </div>
       </div>
 
@@ -592,10 +592,10 @@
       </div>
 
       <div id="heatmap-rows">
-        <div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Calculando heatmap...</div>
+        <div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Calculating heatmap...</div>
       </div>
       <div style="font-size:9.5px;color:var(--text3);margin-top:8px">
-        Leverage math + Volume Profile 500H + Wick history · No representa posiciones reales
+        Leverage math + Volume Profile 500H + Wick history · Does not represent real positions
       </div>
     </div>
 
@@ -672,7 +672,7 @@ async function cargarL2() {
 
     el.innerHTML = imbHtml + wallsHtml + depthHtml;
 
-    const now = new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'});
+    const now = new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
     document.getElementById('liq-ts').textContent = `L2 snapshot · ${now}`;
 
     // Cargar zonas por separado
@@ -712,12 +712,12 @@ function _renderZonas(d) {
   ].filter(Boolean).join('');
 
   el.innerHTML = `
-    <div class="liq-zones-title">Shorts arriba ↑ — imán alcista (squeeze)</div>
+    <div class="liq-zones-title">Shorts above ↑ — bullish magnet (squeeze)</div>
     ${shortRows}
     <div class="liq-zona-sep"></div>
-    <div class="liq-zones-title">Longs abajo ↓ — imán bajista (cascade)</div>
+    <div class="liq-zones-title">Longs below ↓ — bearish magnet (cascade)</div>
     ${longRows}
-    <div class="liq-nota">Estimación matemática desde precio actual — no representa posiciones reales</div>`;
+    <div class="liq-nota">Mathematical estimate from current price — does not represent real positions</div>`;
 }
 
 async function cargarHeatmap() {
@@ -726,7 +726,7 @@ async function cargarHeatmap() {
     const r = await fetch('/api/liquidity/heatmap');
     const d = await r.json();
     if (!d.ok || !d.bins?.length) {
-      box.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Heatmap no disponible</div>';
+      box.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Heatmap not available</div>';
       return;
     }
 
@@ -796,9 +796,9 @@ async function cargarHeatmap() {
 }
 
 function refreshAll() {
-  document.getElementById('l2-content').innerHTML  = '<div style="color:var(--text3);font-size:12px">Cargando...</div>';
-  document.getElementById('zones-content').innerHTML = '<div style="color:var(--text3);font-size:12px">Cargando...</div>';
-  document.getElementById('heatmap-rows').innerHTML  = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Calculando heatmap...</div>';
+  document.getElementById('l2-content').innerHTML  = '<div style="color:var(--text3);font-size:12px">Loading...</div>';
+  document.getElementById('zones-content').innerHTML = '<div style="color:var(--text3);font-size:12px">Loading...</div>';
+  document.getElementById('heatmap-rows').innerHTML  = '<div style="padding:20px;text-align:center;color:var(--text3);font-size:12px">Calculating heatmap...</div>';
   cargarL2();
   cargarHeatmap();
 }

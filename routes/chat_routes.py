@@ -220,8 +220,8 @@ def chat():
 
     # ── Capa 1: Rate limit por minuto ──
     if not check_rate_limit(uid):
-        logger.error(f"Rate limit excedido — usuario: {uid}")
-        return jsonify({"error": "Demasiadas solicitudes. Espera un momento."}), 429
+        logger.error(f"Rate limit exceeded — user: {uid}")
+        return jsonify({"error": "Too many requests. Wait a moment."}), 429
 
     # ── Capa 2: Límite por plan (DB) ──
     permitido, msg = check_plan_limit(current_user)
@@ -262,16 +262,16 @@ def chat():
     _request_model = _MODEL_MAP.get(_model_key, CLAUDE_MODEL)
 
     if not pregunta:
-        return jsonify({"error": "Pregunta vacía"}), 400
+        return jsonify({"error": "Empty message"}), 400
 
-    # ── Capa 3: Límite de longitud (solo el mensaje visible del usuario) ──
+    # ── Layer 3: Length limit (visible user message only) ──
     if len(pregunta) > 1000:
-        return jsonify({"error": "Pregunta demasiado larga. Máximo 1000 caracteres."}), 400
+        return jsonify({"error": "Message too long. Maximum 1000 characters."}), 400
 
-    # ── Capa 4: Prompt injection ──
+    # ── Layer 4: Prompt injection ──
     if check_prompt_injection(pregunta):
-        logger.error(f"Prompt injection detectado — IP: {ip} — texto: {pregunta[:100]}")
-        return jsonify({"error": "Consulta no permitida."}), 400
+        logger.error(f"Prompt injection detected — IP: {ip} — text: {pregunta[:100]}")
+        return jsonify({"error": "Query not allowed."}), 400
 
     # ── Contexto de trade inyectado internamente (ruta /chat/trade/<id>) ──
     # Token único por tab — inmune a sobreescritura entre pestañas
@@ -622,12 +622,29 @@ def chat():
 
         # Inyección de formato — al final para máxima atención del modelo
         _es_analisis = necesita_datos_mercado(pregunta)
-        _tf_nombres  = {"15m": "15 minutos", "1h": "1 hora", "4h": "4 horas", "1d": "Daily"}
-        _fmt_reminder = (
-            f"\n\nFORMATO OBLIGATORIO — Análisis en {tf.upper()} ({_tf_nombres.get(tf, tf)}): "
-            "Responde ÚNICAMENTE con las 4 secciones (MACRO, TÉCNICO, LIQUIDEZ, DECISIÓN). "
-            "Una línea por indicador. Sin escenarios. Termina con la pregunta de follow-up."
-        ) if _es_analisis else ""
+        # Detectar idioma del usuario por caracteres españoles
+        _spanish_chars = set('áéíóúüñÁÉÍÓÚÜÑ¿¡')
+        _is_english = not any(c in pregunta for c in _spanish_chars)
+        if _es_analisis:
+            if _is_english:
+                _tf_nombres   = {"15m": "15 minutes", "1h": "1 hour", "4h": "4 hours", "1d": "Daily"}
+                _fmt_reminder = (
+                    f"\n\nRESPOND ENTIRELY IN ENGLISH. MANDATORY FORMAT — Analysis on {tf.upper()} ({_tf_nombres.get(tf, tf)}): "
+                    "Respond ONLY with the 4 sections (MACRO, TECHNICAL, LIQUIDITY, DECISION). "
+                    "One line per indicator. No scenarios. End with a follow-up question."
+                )
+            else:
+                _tf_nombres   = {"15m": "15 minutos", "1h": "1 hora", "4h": "4 horas", "1d": "Daily"}
+                _fmt_reminder = (
+                    f"\n\nRESPONDE ENTERAMENTE EN ESPAÑOL. FORMATO OBLIGATORIO — Análisis en {tf.upper()} ({_tf_nombres.get(tf, tf)}): "
+                    "Responde ÚNICAMENTE con las 4 secciones (MACRO, TÉCNICO, LIQUIDEZ, DECISIÓN). "
+                    "Una línea por indicador. Sin escenarios. Termina con la pregunta de follow-up."
+                )
+        else:
+            _fmt_reminder = (
+                "\n\nRESPOND ENTIRELY IN ENGLISH." if _is_english
+                else "\n\nRESPONDE ENTERAMENTE EN ESPAÑOL."
+            )
 
         mensaje_enriquecido = (
             (_trigger_alerta if _trigger_alerta else "")
@@ -663,8 +680,8 @@ def chat():
         HistorialChat.guardar(current_user.id, "assistant", texto,    tf=tf)
 
     except Exception as e:
-        logger.error(f"Error en /chat — IP: {ip} — error: {e}")
-        return jsonify({"error": "Error interno. Intenta de nuevo."}), 500
+        logger.error(f"Error in /chat — IP: {ip} — error: {e}")
+        return jsonify({"error": "Internal error. Please try again."}), 500
 
     return jsonify({"respuesta": texto})
 

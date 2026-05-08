@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -95,8 +95,8 @@
   <!-- MERCADO EN VIVO -->
   <div class="sb-block">
     <div class="sb-block-header">
-      <span class="sb-block-label">Mercado en vivo</span>
-      <button class="icon-btn" id="btn-refresh" title="Actualizar">
+      <span class="sb-block-label">Live Market</span>
+      <button class="icon-btn" id="btn-refresh" title="Refresh">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M23 4v6h-6M1 20v-6h6"/>
           <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
@@ -115,7 +115,7 @@
     <div class="price-card" id="price-card">
       <div class="price-loading">
         <div class="pulse-dot"></div>
-        <span>Conectando...</span>
+        <span>Connecting...</span>
       </div>
     </div>
 
@@ -168,28 +168,28 @@
   <div class="sb-block" id="scanner-block">
     <div class="sb-block-header">
       <span class="sb-block-label">Scanner HTF</span>
-      <button class="icon-btn" id="scanner-refresh" title="Actualizar scanner" onclick="cargarScanner()">
+      <button class="icon-btn" id="scanner-refresh" title="Refresh scanner" onclick="cargarScanner()">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
       </button>
     </div>
     <div id="scanner-content">
-      <div style="font-size:11px;color:var(--text3);padding:8px 0">Cargando scanner...</div>
+      <div style="font-size:11px;color:var(--text3);padding:8px 0">Loading scanner...</div>
     </div>
   </div>
 
   <!-- ESTRUCTURA DE PRECIO -->
   <div class="sb-block" id="estructura-block">
     <div class="sb-block-header">
-      <span class="sb-block-label">Estructura 4H</span>
+      <span class="sb-block-label">4H Structure</span>
     </div>
     <div id="estructura-content">
-      <div style="font-size:11px;color:var(--text3);padding:8px 0">Cargando...</div>
+      <div style="font-size:11px;color:var(--text3);padding:8px 0">Loading...</div>
     </div>
   </div>
 
     <!-- BASE DE CONOCIMIENTO -->
   <div class="sb-block">
-    <div class="sb-block-label">Base de conocimiento</div>
+    <div class="sb-block-label">Knowledge Base</div>
     <div class="kb-card">
       <div class="kb-icon">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -197,7 +197,7 @@
         </svg>
       </div>
       <div>
-        <div class="kb-label">Chunks indexados</div>
+        <div class="kb-label">Indexed chunks</div>
         <div class="kb-count" id="kb-count">—</div>
       </div>
     </div>
@@ -209,9 +209,9 @@
       <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/>
       </svg>
-      Recibir alertas en Telegram
+      Receive Telegram alerts
     </a>
-    <div class="tg-hint">Alertas de setup BTC · Reporte diario</div>
+    <div class="tg-hint">BTC setup alerts · Daily report</div>
   </div>
 
   <!-- LIMPIAR -->
@@ -220,7 +220,7 @@
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/>
       </svg>
-      Limpiar conversación
+      Clear conversation
     </button>
   </div>
 
@@ -276,24 +276,24 @@
 
         <!-- Bell notifications -->
         <div class="bell-wrap" id="bell-wrap">
-          <button class="bell-btn" id="bell-btn" type="button" title="Notificaciones">
+          <button class="bell-btn" id="bell-btn" type="button" title="Notifications">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             <span class="bell-badge" id="bell-badge" style="display:none">0</span>
           </button>
           <div class="bell-dropdown" id="bell-dropdown" style="display:none">
             <div class="bell-header">
-              <span>Notificaciones</span>
-              <button class="bell-leer-todas" id="bell-leer-todas" type="button">Leer todas</button>
+              <span>Notifications</span>
+              <button class="bell-leer-todas" id="bell-leer-todas" type="button">Mark all read</button>
             </div>
             <div class="bell-list" id="bell-list">
-              <p class="bell-empty">Sin notificaciones</p>
+              <p class="bell-empty">No notifications</p>
             </div>
           </div>
         </div>
 
         <div class="status-pill" id="status-pill">
           <span class="status-dot"></span>
-          <span data-i18n="online">En línea</span>
+          <span data-i18n="online">Online</span>
         </div>
 
         <!-- User chip (visible tras login) -->
@@ -324,7 +324,7 @@
                 <svg class="icon-moon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
                 <svg class="icon-sun" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
               </span>
-              <span id="dd-theme-label">Modo claro</span>
+              <span id="dd-theme-label">Light mode</span>
             </button>
 
             <!-- Idioma -->
@@ -340,7 +340,7 @@
               <span class="dd-icon">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
               </span>
-              Mi Perfil
+              My Profile
             </a>
             <div class="dd-sep"></div>
 
@@ -349,7 +349,7 @@
               <span class="dd-icon">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               </span>
-              Cerrar sesión
+              Sign out
             </a>
 
           </div><!-- /user-dropdown -->
@@ -365,17 +365,17 @@
       <div class="welcome" id="welcome">
         <div class="welcome-glow"></div>
         <div class="welcome-icon"><img src="/static/bananaTradeLogo2.png" style="width:80px;height:80px;object-fit:contain"></div>
-        <h2>Bienvenido a Banana</h2>
-        <p>Análisis técnico avanzado con datos de mercado en tiempo real.<br>Powered by conocimiento institucional de alto nivel.</p>
+        <h2>Welcome to Banana</h2>
+        <p>Advanced technical analysis with real-time market data.<br>Powered by institutional-grade trading knowledge.</p>
         <div class="chips">
-          <button class="chip" onclick="setInput('Analiza BTC ahora mismo')">Analiza BTC ahora</button>
-          <button class="chip" onclick="setInput('¿Qué es un Order Block?')">Order Block</button>
-          <button class="chip" onclick="setInput('¿Cómo identifico un CHoCH en 4h?')">CHoCH en 4h</button>
-          <button class="chip" onclick="setInput('Explícame gestión de riesgo institucional')">Gestión de riesgo</button>
-          <button class="chip" onclick="setInput('¿Qué es liquidez y cómo usarla en trading?')">Liquidez</button>
+          <button class="chip" onclick="setInput('Analyze BTC right now')">Analyze BTC now</button>
+          <button class="chip" onclick="setInput('What is an Order Block?')">Order Block</button>
+          <button class="chip" onclick="setInput('How do I identify a CHoCH on 4h?')">CHoCH on 4h</button>
+          <button class="chip" onclick="setInput('Explain institutional risk management')">Risk management</button>
+          <button class="chip" onclick="setInput('What is liquidity and how to use it in trading?')">Liquidity</button>
         </div>
         <div class="disclaimer">
-          ⚠️ Análisis educativo únicamente — no constituye asesoría financiera
+          ⚠️ Educational analysis only — not financial advice
         </div>
       </div>
 
@@ -385,7 +385,7 @@
     </div>
 
     <!-- BOTÓN SCROLL AL FONDO -->
-    <button class="scroll-bottom-btn" id="scroll-bottom" title="Ir al fondo">
+    <button class="scroll-bottom-btn" id="scroll-bottom" title="Go to bottom">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/>
       </svg>
@@ -396,7 +396,7 @@
       <div class="input-wrap">
         <textarea
           id="input"
-          placeholder="Escribe tu pregunta o describe una posición..."
+          placeholder="Write your question or describe a position..."
           rows="1"
           autocomplete="off"
           spellcheck="false"
@@ -408,7 +408,7 @@
         </button>
       </div>
       <div class="input-hint-row">
-        <span class="input-hint" data-i18n="inputHint">Enter para enviar · Shift+Enter para nueva línea</span>
+        <span class="input-hint" data-i18n="inputHint">Enter to send · Shift+Enter for new line</span>
         <div class="tf-selector">
           <span class="tf-label">TF</span>
           <button class="tf-btn" data-tf="15m">15M</button>
@@ -417,9 +417,9 @@
           <button class="tf-btn" data-tf="1d">1D</button>
         </div>
         <div class="tf-selector model-selector" id="model-selector-wrap" style="display:none;margin-left:10px;border-left:1px solid var(--border);padding-left:10px">
-          <span class="tf-label">Modelo</span>
-          <button class="tf-btn model-btn active" data-model="haiku" title="Haiku - Rapido y eficiente">Haiku ⚡</button>
-          <button class="tf-btn model-btn" data-model="sonnet" data-pro="1" title="Sonnet - Mayor razonamiento (Pro)">Sonnet ✦</button>
+          <span class="tf-label">Model</span>
+          <button class="tf-btn model-btn active" data-model="haiku" title="Haiku - Fast and efficient">Haiku ⚡</button>
+          <button class="tf-btn model-btn" data-model="sonnet" data-pro="1" title="Sonnet - Higher reasoning (Pro)">Sonnet ✦</button>
         </div>
         <span id="char-count" class="char-count"></span>
       </div>
@@ -506,7 +506,7 @@ function sanitize(str) {
     }
     const notifs = data.notificaciones || [];
     if (notifs.length === 0) {
-      bellList.innerHTML = '<p class="bell-empty">Sin notificaciones</p>';
+      bellList.innerHTML = '<p class="bell-empty">No notifications</p>';
       return;
     }
     const iconos = { ROJO: "🔴", NARANJA: "🟠", AMARILLO: "🟡", INFO: "🔔" };
@@ -517,8 +517,8 @@ function sanitize(str) {
            data-id="${n.id}" data-trade-id="${n.trade_id || ""}" data-tipo="${n.tipo}">
         <div class="bell-item-title">${iconos[n.nivel] || "🔔"} ${sanitize(n.titulo)}</div>
         <div class="bell-item-msg">${sanitize(n.mensaje)}</div>
-        <div class="bell-item-time">${n.creada_en}${esTradeNotif ? ' · <span class="bell-ver-trade">Ver trade →</span>' : ""}</div>
-        <button class="bell-delete-btn" data-del-id="${n.id}" title="Eliminar">✕</button>
+        <div class="bell-item-time">${n.creada_en}${esTradeNotif ? ' · <span class="bell-ver-trade">View trade →</span>' : ""}</div>
+        <button class="bell-delete-btn" data-del-id="${n.id}" title="Delete">✕</button>
       </div>`;
     }).join("");
 

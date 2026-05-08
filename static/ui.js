@@ -28,7 +28,7 @@ const UI_LANG = {
   }
 };
 
-let _currentLang = localStorage.getItem('lang') || 'es';
+let _currentLang = localStorage.getItem('lang') || 'en';
 
 // ── Toggle de tema ──
 function uiToggleTheme() {
@@ -266,7 +266,7 @@ async function cargarLiquidity() {
 
     const zonesHtml = `
       <div class="liq-zones-wrap">
-        <div class="liq-zones-title">Zonas Liquidación Est.</div>
+        <div class="liq-zones-title">Est. Liquidation Zones</div>
         ${ls['10x']  ? zoneRow('Short 10x', ls['10x'],  'short') : ''}
         ${ls['25x']  ? zoneRow('Short 25x', ls['25x'],  'short') : ''}
         ${ls['50x']  ? zoneRow('Short 50x', ls['50x'],  'short') : ''}
@@ -274,10 +274,10 @@ async function cargarLiquidity() {
         ${ll['50x']  ? zoneRow('Long  50x', ll['50x'],  'long') : ''}
         ${ll['25x']  ? zoneRow('Long  25x', ll['25x'],  'long') : ''}
         ${ll['10x']  ? zoneRow('Long  10x', ll['10x'],  'long') : ''}
-        <div class="liq-nota">Estimación matemática desde precio actual — no posiciones reales</div>
+        <div class="liq-nota">Mathematical estimate from current price — not real positions</div>
       </div>`;
 
-    const now = new Date().toLocaleTimeString('es', {hour:'2-digit', minute:'2-digit'});
+    const now = new Date().toLocaleTimeString('en', {hour:'2-digit', minute:'2-digit'});
     el.innerHTML = imbHtml + wallsHtml + depthHtml + zonesHtml +
       `<div class="liq-ts">L2 snapshot · ${now}</div>`;
 
@@ -285,7 +285,7 @@ async function cargarLiquidity() {
     _cargarHeatmap();
 
   } catch(err) {
-    if (el) el.innerHTML = `<div style="font-size:11px;color:var(--text3)">Error cargando liquidez</div>`;
+    if (el) el.innerHTML = `<div style="font-size:11px;color:var(--text3)">Error loading liquidity</div>`;
   } finally {
     if (btn) btn.style.opacity = '1';
   }
@@ -294,17 +294,17 @@ async function cargarLiquidity() {
 async function _cargarHeatmap() {
   const box = document.getElementById('liq-heatmap-box');
   if (!box) return;
-  box.innerHTML = '<div style="font-size:10px;color:var(--text3);padding:6px 0;text-align:center">Calculando heatmap...</div>';
+  box.innerHTML = '<div style="font-size:10px;color:var(--text3);padding:6px 0;text-align:center">Calculating heatmap...</div>';
   try {
     const r = await fetch('/api/liquidity/heatmap');
     const d = await r.json();
     if (!d.ok || !d.bins || d.bins.length === 0) {
-      box.innerHTML = '<div style="font-size:10px;color:var(--text3)">Heatmap no disponible</div>';
+      box.innerHTML = '<div style="font-size:10px;color:var(--text3)">Heatmap not available</div>';
       return;
     }
     _renderHeatmap(box, d);
   } catch(e) {
-    box.innerHTML = '<div style="font-size:10px;color:var(--text3)">Error heatmap</div>';
+    box.innerHTML = '<div style="font-size:10px;color:var(--text3)">Heatmap error</div>';
   }
 }
 
@@ -388,8 +388,8 @@ function _renderHeatmap(box, d) {
       <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:rgba(34,197,94,.3);border-radius:2px;display:inline-block"></span>Long liq</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;background:rgba(239,68,68,.3);border-radius:2px;display:inline-block"></span>Short liq</span>
       <span style="display:flex;align-items:center;gap:3px"><span style="width:18px;height:4px;background:var(--text3);opacity:.4;border-radius:2px;display:inline-block"></span>Vol</span>
-      <span><span style="color:#f59e0b">·</span> Wicks hist.</span>
+      <span><span style="color:#f59e0b">·</span> Hist. wicks</span>
     </div>
     <div style="overflow-y:auto;max-height:380px;border:1px solid var(--border);border-radius:6px">${rows}</div>
-    <div style="font-size:8.5px;color:var(--text3);margin-top:5px">Leverage math + vol profile 500H + wicks · no posiciones reales</div>`;
+    <div style="font-size:8.5px;color:var(--text3);margin-top:5px">Leverage math + vol profile 500H + wicks · not real positions</div>`;
 }

@@ -177,11 +177,11 @@ async function enviar() {
     if (!res.ok) {
       quitarTyping(typingId);
       const errores = {
-        429: '⏱️ Demasiadas solicitudes. Espera un momento antes de continuar.',
-        500: '⚠️ Error interno del servidor. Intenta de nuevo en unos segundos.',
-        503: '⚠️ Servicio temporalmente no disponible.',
+        429: '⏱️ Too many requests. Wait a moment before continuing.',
+        500: '⚠️ Internal server error. Try again in a few seconds.',
+        503: '⚠️ Service temporarily unavailable.',
       };
-      const msg = errores[res.status] || `⚠️ Error del servidor (${res.status}). Intenta de nuevo.`;
+      const msg = errores[res.status] || `⚠️ Server error (${res.status}). Try again.`;
       agregarMensajeError(msg);
       return;
     }
@@ -748,7 +748,7 @@ const TRANSLATIONS = {
   }
 };
 
-let currentLang = localStorage.getItem('lang') || 'es';
+let currentLang = localStorage.getItem('lang') || 'en';
 
 function applyLang(lang) {
   const t = TRANSLATIONS[lang];
@@ -845,15 +845,15 @@ async function cargarScanner() {
     if (d.alerta_valida) {
       alertaBadge = `<div class="scanner-alerta-badge activa">
         <span style="width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block"></span>
-        ALERTA VÁLIDA
+        VALID ALERT
       </div>`;
     } else if (d.setup_ok || d.setup_potencial) {
       alertaBadge = `<div class="scanner-alerta-badge filtrado">
         <span style="width:6px;height:6px;border-radius:50%;background:#f59e0b;display:inline-block"></span>
-        ${d.setup_ok ? '8/8' : '7/8'} FILTRADO — score bajo
+        ${d.setup_ok ? '8/8' : '7/8'} FILTERED — low score
       </div>`;
     } else {
-      alertaBadge = `<div class="scanner-alerta-badge sin-setup">Sin setup activo</div>`;
+      alertaBadge = `<div class="scanner-alerta-badge sin-setup">No active setup</div>`;
     }
 
     // Barras de scoring
@@ -895,7 +895,7 @@ async function cargarScanner() {
           <span class="scanner-bar-pts">${d.score_edge}/25</span>
         </div>
         <div class="scanner-bar-row">
-          <span class="scanner-bar-label">Técnico</span>
+          <span class="scanner-bar-label">Technical</span>
           <div class="scanner-bar-track"><div class="scanner-bar-fill tec" style="width:${tecPct}%"></div></div>
           <span class="scanner-bar-pts">${d.score_tecnico}/40</span>
         </div>
@@ -903,11 +903,11 @@ async function cargarScanner() {
       <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px">
         <div style="display:flex;gap:6px">
           <div style="flex:1;background:var(--bg3);border-radius:8px;padding:8px 10px">
-            <div style="font-size:9px;color:var(--text3);margin-bottom:2px">RÉGIMEN</div>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:2px">REGIME</div>
             <div style="font-size:11px;font-weight:600;color:var(--text)">${d.regimen || '—'}</div>
           </div>
           <div style="flex:1;background:var(--bg3);border-radius:8px;padding:8px 10px">
-            <div style="font-size:9px;color:var(--text3);margin-bottom:2px">SESIÓN</div>
+            <div style="font-size:9px;color:var(--text3);margin-bottom:2px">SESSION</div>
             <div style="font-size:11px;font-weight:600;color:var(--text)">${e.kill_zone || '—'}</div>
           </div>
         </div>
@@ -937,7 +937,7 @@ async function cargarScanner() {
         if (cvdDiv) { cvdTxt = '⚡ CVD DIV'; cvdColor = '#f59e0b'; }
         else if (cvdBias === 'bullish') { cvdTxt = '▲ CVD BUY'; cvdColor = 'var(--green)'; }
         else if (cvdBias === 'bearish') { cvdTxt = '▼ CVD SELL'; cvdColor = 'var(--red)'; }
-        else { cvdTxt = '— CVD neutro'; cvdColor = 'var(--text3)'; }
+        else { cvdTxt = '— CVD neutral'; cvdColor = 'var(--text3)'; }
         return `<div style="font-size:9px;font-weight:600;color:${cvdColor};margin-top:4px">${cvdTxt}</div>`;
       })()}
 
@@ -946,7 +946,7 @@ async function cargarScanner() {
     `;
 
   } catch(err) {
-    if (el) el.innerHTML = `<div style="font-size:11px;color:var(--text3)">Error cargando scanner</div>`;
+    if (el) el.innerHTML = `<div style="font-size:11px;color:var(--text3)">Error loading scanner</div>`;
     return;
   } finally {
     if (btn) btn.style.opacity = '1';
@@ -995,7 +995,7 @@ function renderEstructura(d) {
   levels.sort((a, b) => b.mid - a.mid);
 
   if (levels.length <= 1) {
-    el.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:4px 0">Sin niveles detectados</div>';
+    el.innerHTML = '<div style="font-size:11px;color:var(--text3);padding:4px 0">No levels detected</div>';
     return;
   }
 
@@ -1030,7 +1030,7 @@ function renderEstructura(d) {
   }).join('');
 
   el.innerHTML = `
-    <div class="lv-title">Mapa de niveles 4H</div>
+    <div class="lv-title">4H Level Map</div>
     <div class="lv-map">${rows}</div>
     <div class="scanner-ts">${d.timestamp || ''}</div>
   `;
