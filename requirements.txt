@@ -9,7 +9,6 @@ flask-dance==7.1.0
 flask-talisman==1.1.0
 sqlalchemy==2.0.36
 anthropic==0.40.0
-chromadb==0.6.3
 ccxt==4.4.16
 python-dotenv==1.0.1
 bcrypt==4.2.1
@@ -18,18 +17,27 @@ apscheduler==3.10.4
 httpx==0.28.1
 requests==2.32.3
 
-# PostgreSQL (produccion Railway)
+# PostgreSQL (produccion)
 psycopg2-binary==2.9.10
 
 # Servidor WSGI produccion
 gunicorn==23.0.0
 
+# Vector DB — Qdrant Cloud (primario) + ChromaDB (fallback local)
+qdrant-client==1.9.1
+chromadb==0.6.3
+
 # Embedder RAG — ONNX Runtime
-# fastembed reemplaza sentence-transformers+torch para ahorrar ~300 MB RAM
+# fastembed reemplaza sentence-transformers+torch: ~40 MB vs ~350 MB RAM
 # Mismo modelo all-MiniLM-L6-v2, mismos vectores, compatible con Qdrant
 fastembed==0.4.2
 
+# HMM — detección de régimen de mercado
 hmmlearn==0.3.3
+numpy>=1.24.0
+
+# Email transaccional
+resend==2.3.0
 
 # 2FA TOTP
 pyotp==2.9.0

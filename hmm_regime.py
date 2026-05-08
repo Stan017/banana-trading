@@ -336,13 +336,12 @@ def inicializar_hmm_background(symbol: str = "BTC/USDT"):
         # No hay cache válido → entrenar desde cero
         try:
             logger.info("HMM: descargando datos históricos para entrenamiento...")
-            from stats_engine import fetch_ohlcv_binance
-            df = fetch_ohlcv_binance(interval="1d", limit=N_TRAIN_DAYS)
-            # Convertir DataFrame a lista de dicts compatible con _build_features
+            from binance_data import get_velas
+            raw = get_velas("BTC/USDT", "1d", N_TRAIN_DAYS)
             velas = [
-                {"open": r["open"], "high": r["high"],
-                 "low": r["low"],   "close": r["close"], "volumen": r["volume"]}
-                for _, r in df.iterrows()
+                {"open": v["open"], "high": v["high"],
+                 "low": v["low"],   "close": v["close"], "volumen": v.get("volume", 0)}
+                for v in raw
             ]
             det.fit(velas)
         except Exception as e:
