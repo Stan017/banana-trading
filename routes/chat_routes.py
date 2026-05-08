@@ -254,11 +254,12 @@ def chat():
         tf = "4h"
 
     # ── Modelo seleccionado por el usuario ──────────────────────────────────
-    _model_key = data.get("model", "haiku")
-    # Sonnet solo para Pro (a menos que tenga BYOK — paga con su key)
-    _has_byok  = bool(current_user.anthropic_key_enc)
-    if _model_key == "sonnet" and not current_user.es_pro() and not _has_byok:
-        _model_key = "haiku"   # downgrade silencioso
+    _model_key     = data.get("model", "haiku")
+    _has_byok      = bool(current_user.anthropic_key_enc)
+    _is_privileged = current_user.es_pro() or _has_byok
+    # Sonnet/Opus solo para Pro o BYOK; free users → haiku
+    if _model_key in ("sonnet", "opus") and not _is_privileged:
+        _model_key = "haiku"
     _request_model = _MODEL_MAP.get(_model_key, CLAUDE_MODEL)
 
     if not pregunta:

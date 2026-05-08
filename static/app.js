@@ -52,7 +52,7 @@ function showModelUpgradeHint(btn) {
   if (existing) existing.remove();
   const hint = document.createElement('div');
   hint.id = 'model-upgrade-hint';
-  hint.textContent = 'Sonnet requiere Plan Pro';
+  hint.textContent = 'Requires Pro Plan';
   hint.style.cssText = `
     position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
     background:var(--bg1);border:1px solid var(--border);

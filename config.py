@@ -129,4 +129,5 @@ PLAN_LIMITS: dict[str, int] = {
 MODEL_MAP: dict[str, str] = {
     "haiku" : "claude-haiku-4-5-20251001",
     "sonnet": "claude-sonnet-4-5-20251001",
+    "opus"  : "claude-opus-4-5",
 }
