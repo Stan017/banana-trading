@@ -9,9 +9,9 @@ logger = logging.getLogger(__name__)
 # ============================================================
 # CONFIGURACIÓN — Sin API key, datos públicos gratis
 # ============================================================
-exchange      = ccxt.binance()                          # spot — precio, velas
-exchange_fut  = ccxt.binance({                         # futuros — funding, OI
-    'options': { 'defaultType': 'future' }
+exchange      = ccxt.bybit()                            # spot — precio, velas
+exchange_fut  = ccxt.bybit({                           # futuros — funding, OI
+    'options': { 'defaultType': 'linear' }
 })
 
 # ============================================================
@@ -189,7 +189,7 @@ def get_funding_rate(symbol="BTC/USDT"):
         return _FUNDING_CACHE[symbol]["data"]
     result = None
     try:
-        symbol_fut = symbol.replace("/", "")
+        symbol_fut = symbol + ":USDT"  # Bybit linear: BTC/USDT:USDT
         funding    = exchange_fut.fetch_funding_rate(symbol_fut)
         # FIX BUG 5: usar `is not None` en vez de `or` para no perder funding == 0.0
         rate = funding.get("fundingRate")
@@ -209,7 +209,7 @@ def get_open_interest(symbol="BTC/USDT"):
         return _OI_CACHE[symbol]["data"]
     result = {"valor": None, "cambio_4h": None, "cambio_24h": None}
     try:
-        symbol_fut = symbol.replace("/", "")
+        symbol_fut = symbol + ":USDT"  # Bybit linear: BTC/USDT:USDT
         oi_hist    = exchange_fut.fetch_open_interest_history(symbol_fut, "1h", limit=25)
 
         if oi_hist and len(oi_hist) >= 5:
