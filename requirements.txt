@@ -30,7 +30,7 @@ chromadb==0.6.3
 # Embedder RAG — ONNX Runtime
 # fastembed reemplaza sentence-transformers+torch: ~40 MB vs ~350 MB RAM
 # Mismo modelo all-MiniLM-L6-v2, mismos vectores, compatible con Qdrant
-fastembed==0.4.2
+fastembed==0.8.0
 
 # HMM — detección de régimen de mercado
 hmmlearn==0.3.3
